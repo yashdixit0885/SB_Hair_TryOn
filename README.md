@@ -10,20 +10,35 @@ The bet: build the only color try-on app that's **brand-neutral, outcome-tracked
 
 ## Status
 
-- Brainstorming session complete (2026-05-02) — 20 ideas across 6 dimensions, V1 locked at 13 features
-- Product brief complete — audience: internal Product & Engineering team
-- LLM-friendly distillate complete — input for the next stage
-- Next stage: **PRD creation**, then architecture, then implementation
+Planning chain complete; ready for implementation.
+
+- ✅ Brainstorming session (2026-05-02) — 20 ideas across 6 dimensions, V1 locked at 13 features
+- ✅ Product Brief — audience: internal Product & Engineering team
+- ✅ LLM-friendly distillate — token-efficient overflow context for downstream stages
+- ✅ Product Requirements Document (2026-05-02) — 50 FRs, 43 NFRs, 8 capability areas, 5 actor types, dual-phase (Demo V1 + Production V1)
+- ✅ UX Design Specification (2026-05-03) — Radix + Tailwind + shadcn component inventory, 5 journey flows (Maya, Janelle, Aliyah, Marcus, Elena), Editorial Magazine + Pro Tool design directions, WCAG 2.2 AA throughout
+- ✅ Implementation Readiness Report (2026-05-03) — PRD validated; 0 critical issues; forward-looking guidance for downstream artifacts
+- ✅ Architecture Decision Document (2026-05-03) — stack decisions (Next.js 16.2 + TypeScript strict + Drizzle + TanStack Query + Zustand + MediaPipe Tasks Vision), 9 provider interfaces (mock/production swap underwrites the demo→production single-codebase claim), full project structure with FR→file mapping, Mermaid visual architecture, 50/50 FR coverage + 43/43 NFR coverage validation
+- ⏭ Next stage: **Epics & Stories** (`bmad-create-epics-and-stories`), then implementation
+
+**Phasing model (binding):** Demo V1 (now, 8 weeks, runs locally on laptop + mobile, mocked vendors via provider abstractions, walked through to Sally Beauty execs) → Production V1 (post-funding, 16 weeks, same codebase, real vendors, cloud-deployed in DFW with full BIPA / TX CUBI / GDPR compliance).
 
 ## Key documents
 
-| Document | Path |
-|---|---|
-| Executive Product Brief | [_bmad-output/planning-artifacts/product-brief-SB_Project.md](_bmad-output/planning-artifacts/product-brief-SB_Project.md) |
-| Detail Pack (token-efficient distillate for downstream LLM/PRD work) | [_bmad-output/planning-artifacts/product-brief-SB_Project-distillate.md](_bmad-output/planning-artifacts/product-brief-SB_Project-distillate.md) |
-| Foundational Brainstorming Session | [_bmad-output/brainstorming/brainstorming-session-2026-05-02-0829.md](_bmad-output/brainstorming/brainstorming-session-2026-05-02-0829.md) |
+| Document | Path | Purpose |
+|---|---|---|
+| Architecture Decision Document | [_bmad-output/planning-artifacts/architecture.md](_bmad-output/planning-artifacts/architecture.md) | Binding technical contract: stack, providers, project structure, patterns, validation. Read first if implementing. |
+| Implementation Readiness Report | [_bmad-output/planning-artifacts/implementation-readiness-report-2026-05-03.md](_bmad-output/planning-artifacts/implementation-readiness-report-2026-05-03.md) | PRD validation + forward-looking guidance for epics/stories generation |
+| UX Design Specification | [_bmad-output/planning-artifacts/ux-design-specification.md](_bmad-output/planning-artifacts/ux-design-specification.md) | Component inventory, journey flows, design system foundation, responsive + a11y strategy |
+| Product Requirements Document | [_bmad-output/planning-artifacts/prd.md](_bmad-output/planning-artifacts/prd.md) | Capability contract: 50 FRs / 43 NFRs / phased success criteria |
+| Executive Product Brief | [_bmad-output/planning-artifacts/product-brief-SB_Project.md](_bmad-output/planning-artifacts/product-brief-SB_Project.md) | Strategic framing and product vision |
+| Brief Detail Pack (distillate) | [_bmad-output/planning-artifacts/product-brief-SB_Project-distillate.md](_bmad-output/planning-artifacts/product-brief-SB_Project-distillate.md) | Token-efficient context for downstream LLM/PRD work |
+| Foundational Brainstorming Session | [_bmad-output/brainstorming/brainstorming-session-2026-05-02-0829.md](_bmad-output/brainstorming/brainstorming-session-2026-05-02-0829.md) | Ideation source |
 
-Start with the Product Brief if you're new to the project. The Detail Pack is what to feed to a PRD-creation workflow or an LLM helping with sprint planning.
+**Reading order for newcomers:**
+- Strategy / "why": Brief → Brainstorming
+- Product surface / "what": PRD → UX Spec
+- Engineering / "how": Architecture → Readiness Report
 
 ## Repository structure
 

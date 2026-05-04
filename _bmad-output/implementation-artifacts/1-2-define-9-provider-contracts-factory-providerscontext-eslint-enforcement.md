@@ -1,6 +1,6 @@
 # Story 1.2: Define 9 Provider Contracts + Factory + ProvidersContext + ESLint Enforcement
 
-**Status:** ready-for-dev
+**Status:** done
 
 ## Story
 
@@ -25,6 +25,8 @@ When the developer creates `src/lib/providers/factory.ts`,
 Then it exports `createProviders()` that reads `NEXT_PUBLIC_PROVIDER_MODE` (`"mock"` | `"production"`) plus per-provider override env vars (e.g. `NEXT_PUBLIC_AR_PROVIDER`) and returns `{ ar, reviews, auth, attribution, notification, bookingHandoff, salon, bsg, calendar, editorial }` typed against the contract interfaces.
 
 And it exports `createMockProviders()` — same shape, always returns stub mock instances regardless of env vars (used by test fixtures and Story 1.3's Storybook `preview.ts` decorator).
+
+> **Demo V1 note:** In the current implementation all `make*()` helpers ignore the resolved mode and return a Mock instance regardless of `NEXT_PUBLIC_PROVIDER_MODE`. This is intentional for Demo V1 — no production provider classes exist yet (post-funding work). The env-var resolution machinery is wired and correct; production wiring is a localized edit to each `make*()` helper when the corresponding vendor implementation ships. A misconfigured production env will silently serve mock data rather than crashing boot. This behaviour is tested and asserted in AC6.
 
 **AC3 — `context.tsx` with `<ProvidersContext>` + strictly-typed `useProvider()` hook**
 
@@ -62,80 +64,106 @@ Then it:
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create `ProviderError` shared error class** (AC1, AC6)
-  - [ ] Create `src/lib/providers/errors.ts` exporting `ProviderError extends Error` with `code: string`, `userMessage: string`, `cause?: unknown` (matches architecture §5 pattern example exactly)
-  - [ ] Create companion test `src/lib/providers/errors.test.ts` (trivial; confirms class is constructable and `instanceof Error`)
+- [x] **Task 1: Create `ProviderError` shared error class** (AC1, AC6)
+  - [x] Create `src/lib/providers/errors.ts` exporting `ProviderError extends Error` with `code: string`, `userMessage: string`, `cause?: unknown` (matches architecture §5 pattern example exactly)
+  - [x] Create companion test `src/lib/providers/errors.test.ts` (trivial; confirms class is constructable and `instanceof Error`)
 
-- [ ] **Task 2: Create 10 contract interface files** (AC1)
-  - [ ] `src/lib/providers/contracts/ar-provider.ts` — `ARProvider` interface with `prewarm()`, `segment(image: ImageBitmap): Promise<SegmentationResult>`, `dispose()`; export `SegmentationResult` type (`{ alphaMask: Uint8ClampedArray; confidence: number; width: number; height: number }`)
-  - [ ] `src/lib/providers/contracts/review-provider.ts` — `ReviewProvider` with `list(filters: ReviewFilters): Promise<Review[]>`, `get(reviewId: string): Promise<Review>`, `submit(payload: ReviewSubmitPayload): Promise<Review>`, `reply(reviewId: string, body: string): Promise<void>`, `getRanking(colorSlug: string): Promise<ReviewRanking>`; export all referenced types
-  - [ ] `src/lib/providers/contracts/auth-provider.ts` — `AuthProvider` with `getCurrentUser(): Promise<AuthUser>`, `login(): Promise<void>`, `logout(): Promise<void>`, `requireRole(role: UserRole): Promise<void>`; export `AuthUser` type (`{ userId: string; role: UserRole; displayName: string; sallyRewardsId?: string } | { role: "Guest" }`), `UserRole` (`"Consumer" | "Stylist" | "SalonPartner" | "EditorialCurator" | "Guest"`)
-  - [ ] `src/lib/providers/contracts/attribution-provider.ts` — `AttributionProvider` with `issueToken(payload: AttributionTokenPayload): Promise<string>`, `verifyToken(token: string): Promise<TokenVerifyResult>`, `getAttributionForPartner(partnerId: string, range: DateRange): Promise<PartnerAttribution>`, `getAttributedBookingsForStylist(stylistId: string, range: DateRange): Promise<StylistAttribution>`, `getColorChoiceAnalytics(partnerId: string, range: DateRange): Promise<ColorChoiceAnalytics>`; export all referenced types; `TokenVerifyResult` = `{ valid: true; payload: AttributionTokenPayload } | { valid: false; reason: "tampered" | "expired" | "malformed" }`
-  - [ ] `src/lib/providers/contracts/notification-provider.ts` — `NotificationProvider` with `schedule(payload: ScheduleNotificationPayload): Promise<void>`, `send(channel: NotificationChannel, payload: NotificationPayload): Promise<void>`; export `NotificationChannel` (`"sms-24h" | "email-7d" | "in-app-banner"`), `ScheduleNotificationPayload` (`{ type: "post-booking"; bookingId: string; channels: NotificationChannel[] }`)
-  - [ ] `src/lib/providers/contracts/booking-handoff-provider.ts` — `BookingHandoffProvider` with `handoff(payload: BookingHandoffPayload): Promise<{ deepLinkUrl: string }>`; export `BookingHandoffPayload` (`{ salonId: string; lookId: string; token: string }`)
-  - [ ] `src/lib/providers/contracts/salon-provider.ts` — `SalonProvider` with `search(filters: SalonSearchFilters): Promise<Salon[]>`, `getSalonBySlug(salonSlug: string): Promise<Salon>`, `getStylists(salonSlug: string): Promise<Stylist[]>`, `getCertifications(salonSlug: string): Promise<Certification[]>`; export all referenced types
-  - [ ] `src/lib/providers/contracts/bsg-provider.ts` — `BSGProvider` with `suggestReorder(salonId: string): Promise<BSGReorderSuggestion[]>`, `getProductInfo(productId: string): Promise<BSGProduct>`; export all referenced types
-  - [ ] `src/lib/providers/contracts/calendar-provider.ts` — `CalendarProvider` with `createInvite(payload: CalendarInvitePayload): Promise<CalendarInvite>`; export `CalendarInvitePayload`, `CalendarInvite` (`{ inviteUrl: string; calendarFormat: "ical" | "google" | "outlook" }`)
-  - [ ] `src/lib/providers/contracts/editorial-provider.ts` — `EditorialProvider` with read methods: `getColorTaxonomy(): Promise<ColorTaxonomy[]>`, `getColorBySlug(slug: string): Promise<ColorTaxonomy>`, `getBrands(): Promise<Brand[]>`, `getBrandColorMappings(): Promise<BrandColorMapping[]>`, `getSpecialtyTierFlag(colorSlug: string): Promise<boolean>`, `getAuditLog(entityType: string, entityId: string): Promise<AuditLogEntry[]>`, `getClassificationQueue(filters: ClassificationFilters): Promise<ClassificationItem[]>`, `getClassificationQuality(): Promise<ClassificationQuality>` and write methods: `createColor(payload: CreateColorPayload): Promise<ColorTaxonomy>`, `updateColor(slug: string, patch: Partial<ColorTaxonomy>): Promise<ColorTaxonomy>`, `deactivateColor(slug: string, reason: string): Promise<void>`, `setSpecialtyTier(slug: string, isSpecialty: boolean): Promise<void>`, `createBrandColorMapping(payload: CreateBrandColorMappingPayload): Promise<BrandColorMapping>`, `updateBrandColorMapping(id: string, patch: Partial<BrandColorMapping>): Promise<BrandColorMapping>`, `classifyReview(reviewId: string, decision: "accept" | "reject"): Promise<void>`; export all referenced types
-  - [ ] Verify NO concrete vendor package imports anywhere in these 10 files (only TypeScript built-in types or types defined within the file/contracts folder)
+- [x] **Task 2: Create 10 contract interface files** (AC1)
+  - [x] `src/lib/providers/contracts/ar-provider.ts` — `ARProvider` interface with `prewarm()`, `segment(image: ImageBitmap): Promise<SegmentationResult>`, `dispose()`; export `SegmentationResult` type
+  - [x] `src/lib/providers/contracts/review-provider.ts` — `ReviewProvider` with `list`, `get`, `submit`, `reply`, `getRanking`; full type set exported
+  - [x] `src/lib/providers/contracts/auth-provider.ts` — `AuthProvider` + `AuthUser` discriminated union + `UserRole` literal union
+  - [x] `src/lib/providers/contracts/attribution-provider.ts` — `AttributionProvider` + token payload + verify result + partner / stylist / color-choice aggregates
+  - [x] `src/lib/providers/contracts/notification-provider.ts` — `NotificationProvider` + `NotificationChannel` literal union + payloads
+  - [x] `src/lib/providers/contracts/booking-handoff-provider.ts` — `BookingHandoffProvider` + payload type
+  - [x] `src/lib/providers/contracts/salon-provider.ts` — `SalonProvider` + `Salon`, `Stylist`, `Certification`, `SalonSearchFilters`
+  - [x] `src/lib/providers/contracts/bsg-provider.ts` — `BSGProvider` + `BSGProduct`, `BSGReorderSuggestion`
+  - [x] `src/lib/providers/contracts/calendar-provider.ts` — `CalendarProvider` + invite payload + invite return shape
+  - [x] `src/lib/providers/contracts/editorial-provider.ts` — `EditorialProvider` (read + write) + 8 supporting types
+  - [x] Verified NO vendor imports in contract files (`grep import.*from src/lib/providers/contracts/` returns empty)
 
-- [ ] **Task 3: Create placeholder stub mock implementations** (AC2, AC6)
-  - [ ] Create `src/lib/providers/mock/` directory (it doesn't exist yet)
-  - [ ] Create 10 stub files: `MockARProvider.ts`, `MockReviewProvider.ts`, `MockAuthProvider.ts`, `MockAttributionProvider.ts`, `MockNotificationProvider.ts`, `MockBookingHandoffProvider.ts`, `MockSalonProvider.ts`, `MockBSGProvider.ts`, `MockCalendarProvider.ts`, `MockEditorialProvider.ts` — each implements its interface with all methods throwing `new ProviderError("NOT_IMPLEMENTED", "This provider is not yet implemented. See the story that implements this provider for the real implementation.")` — these stubs keep TypeScript happy and allow the factory to compile; later stories (1.5, 2.1, 3.1, etc.) replace each stub with real implementations
-  - [ ] Create `src/lib/providers/production/` directory with a placeholder `README.md` (or `.gitkeep`) — post-funding implementations land here
-  - [ ] Add realistic latency simulation to stubs (50-200ms `await new Promise(r => setTimeout(r, 50 + Math.random() * 150))`) so demo feels real from day one (see architecture §5 "Always async, always typed")
+- [x] **Task 3: Create placeholder stub mock implementations** (AC2, AC6)
+  - [x] Created `src/lib/providers/mock/` directory with 10 stub class files. Each implements its contract; every method awaits a 50-200ms `sleep()` then throws `ProviderError("NOT_IMPLEMENTED", "Mock{X}.{method} is not yet implemented. See Story {N}.{M}.")`. Stubs use `_`-prefixed args to satisfy the no-unused-vars rule while keeping the contract argument shape visible.
+  - [x] Created `src/lib/providers/production/` with a `README.md` documenting the naming convention (`{Vendor}{Interface}.ts`), the four implementation rules, and the link to the architecture's mock→production mapping.
+  - [x] Realistic latency in all 10 stubs (`50 + Math.random() * 150` ms) — architecture §5 "Mock providers introduce realistic latency".
 
-- [ ] **Task 4: Create `factory.ts`** (AC2)
-  - [ ] Export `createProviders()` — reads `process.env.NEXT_PUBLIC_PROVIDER_MODE` (default `"mock"`), reads per-provider overrides, returns `Providers` object using stub mocks for `"mock"` mode and stub production stubs for `"production"` (production stubs also throw `NOT_IMPLEMENTED` for now — real production implementations are post-funding)
-  - [ ] Export `createMockProviders()` — always returns `Providers` object using mock stubs regardless of env vars; used by tests and Storybook (Story 1.3 depends on this export)
-  - [ ] Export `Providers` type: `{ ar: ARProvider; reviews: ReviewProvider; auth: AuthProvider; attribution: AttributionProvider; notification: NotificationProvider; bookingHandoff: BookingHandoffProvider; salon: SalonProvider; bsg: BSGProvider; calendar: CalendarProvider; editorial: EditorialProvider }`
+- [x] **Task 4: Create `factory.ts`** (AC2)
+  - [x] Exported `createProviders()` — reads `NEXT_PUBLIC_PROVIDER_MODE` (default `"mock"`) and per-slot override env vars (`NEXT_PUBLIC_AR_PROVIDER`, etc.); returns `Providers` object via per-slot `make*()` constructors. Production branch is stubbed-but-falls-through-to-mock for Demo V1 so a misconfigured env doesn't crash boot; the production branch becomes `case "production": return new {Vendor}{Interface}()` post-funding.
+  - [x] Exported `createMockProviders()` — env-var-independent; always returns mock instances. Story 1.3's Storybook decorator and the Vitest contract test both use this.
+  - [x] Exported `Providers` type with all 10 keys typed against the contract interfaces.
+  - [x] Used explicit object literal (not loop) so TypeScript narrows each property correctly without `any` casts.
 
-- [ ] **Task 5: Create `context.tsx` with `<ProvidersContext>` and `useProvider()` hook** (AC3)
-  - [ ] Add `"use client"` directive at top (this file contains React hooks; Server Components import from factory directly)
-  - [ ] Create `ProvidersContext` via `React.createContext<Providers | null>(null)` (null default forces provider wrapping to be explicit)
-  - [ ] Export `<ProvidersContext.Provider>` component (re-export or thin wrapper)
-  - [ ] Export `useProvider` with function overloads for each key: `function useProvider(name: "ar"): ARProvider`, `function useProvider(name: "reviews"): ReviewProvider`, etc. — 10 overloads total; implementation uses `useContext(ProvidersContext)` and asserts non-null (throws if used outside provider boundary); **zero `any` in types or implementation**
-  - [ ] Guard: if `useContext` returns `null`, throw `new Error("useProvider must be used within <ProvidersContext.Provider>")` — gives a clear DX error message
+- [x] **Task 5: Create `context.tsx` with `<ProvidersContext>` and `useProvider()` hook** (AC3)
+  - [x] Added `"use client"` directive.
+  - [x] `ProvidersContext = createContext<Providers | null>(null)` — null default forces explicit provider wrapping.
+  - [x] `ProvidersContext.Provider` re-exported via the barrel (Story 1.3's Storybook decorator imports `ProvidersContext` from `@/lib/providers`).
+  - [x] `useProvider` exported with **10 function overloads** (one per slot) plus a generic implementation `<K extends keyof Providers>(name: K): Providers[K]`. Zero `any` in types or implementation — `eslint --fix` confirmed.
+  - [x] Throws `Error("useProvider must be used within <ProvidersContext.Provider>...")` when used outside the boundary; covered by `context.test.tsx`.
 
-- [ ] **Task 6: Create `src/lib/providers/index.ts` public barrel** (AC4)
-  - [ ] Re-export all 10 contract interfaces as types: `export type { ARProvider } from "./contracts/ar-provider"`, etc.
-  - [ ] Re-export shared types from contracts (SegmentationResult, AuthUser, UserRole, etc.)
-  - [ ] Re-export `ProviderError` from `./errors`
-  - [ ] Re-export `Providers`, `createProviders`, `createMockProviders` from `./factory`
-  - [ ] Re-export `useProvider`, `ProvidersContext` from `./context`
-  - [ ] This file is NOT `"use client"` — Server Components can import from it; hooks are client-only by their own directive
+- [x] **Task 6: Create `src/lib/providers/index.ts` public barrel** (AC4)
+  - [x] All 10 contract interfaces re-exported as types.
+  - [x] All supporting types re-exported (SegmentationResult, AuthUser, UserRole, OutcomeDimensions, SourceClass, ReviewVisibility, DateRange, all attribution shapes, all notification shapes, all salon shapes, all editorial shapes, calendar shapes, BSG shapes, etc.).
+  - [x] `ProviderError` re-exported from `./errors`.
+  - [x] `Providers`, `createProviders`, `createMockProviders` re-exported from `./factory`.
+  - [x] `useProvider`, `ProvidersContext` re-exported from `./context`.
+  - [x] No `"use client"` on the barrel — Server Components import `createProviders`; Client Components import `useProvider` (the directive lives on `context.tsx`).
 
-- [ ] **Task 7: Update `src/app/layout.tsx`** (AC4)
-  - [ ] Read the current layout.tsx before editing (it has Geist font setup and basic structure)
-  - [ ] Add `"use client"` wrapping via a separate `Providers.tsx` client component (recommended Next.js App Router pattern to keep the root layout as a Server Component) OR wrap inline — see Dev Notes for the recommended pattern
-  - [ ] Wire `<ProvidersContext.Provider value={createProviders()}>` around `{children}`
-  - [ ] Wire `<QueryClientProvider client={queryClient}>` around children (create a `QueryClient` instance outside the component per TanStack Query docs for Next.js App Router — use `React.useMemo` or module-level singleton)
-  - [ ] Update metadata title from "Create Next App" to "Sally Beauty Hair Color Try-On" (housekeeping while touching this file)
+- [x] **Task 7: Update `src/app/layout.tsx`** (AC4)
+  - [x] Created `src/components/root-providers.tsx` (`"use client"`) containing both `ProvidersContext.Provider` and `QueryClientProvider`. **Important deviation from the dev guide:** providers are constructed *inside* `RootProviders` via `useState(() => createProviders())`, not in `layout.tsx`. Reason: Next.js RSC serialization rejects class instances crossing the Server→Client boundary as props, so the original "create on server, pass to client" pattern fails the production build. Server Components that need providers call `createProviders()` directly from `@/lib/providers` (architecture §4 explicitly supports this).
+  - [x] `RootProviders` instantiates `QueryClient` via `useState(() => new QueryClient(...))` per TanStack Query's Next App Router guidance (stable per-mount).
+  - [x] `layout.tsx` now wraps `{children}` in `<RootProviders>` and remains a Server Component (metadata, fonts, caching semantics preserved).
+  - [x] Metadata title updated to "Sally Beauty Hair Color Try-On" with a one-line description.
 
-- [ ] **Task 8: Update `eslint.config.mjs`** (AC5)
-  - [ ] Read current eslint.config.mjs before editing
-  - [ ] Add a config object with `files: ["src/**/*.{ts,tsx}"]`, `ignores: ["src/lib/providers/mock/**", "src/lib/providers/production/**", "src/lib/providers/factory.ts"]`, containing the vendor-SDK restriction rule (exact `no-restricted-imports` patterns from architecture §5)
-  - [ ] Add a separate config object with `files: ["src/**/*.{ts,tsx}"]` containing `@typescript-eslint/no-explicit-any: "error"` and `@typescript-eslint/no-non-null-assertion: "error"` (no `ignores` override — these apply everywhere including provider files)
-  - [ ] Verify `pnpm lint` still passes after changes (the new rules should have zero violations in current codebase since there are no vendor imports or `any` uses yet)
+- [x] **Task 8: Update `eslint.config.mjs`** (AC5)
+  - [x] Added the vendor-import restriction config object with the four pattern groups from architecture §5: `@mediapipe/*`, `twilio` + `@sendgrid/*`, `@supabase/*`, and `@/lib/providers/{mock,production}/*`. `ignores` excludes `src/lib/providers/{mock,production}/**` and `src/lib/providers/factory.ts` so implementation files can still import their vendor SDKs.
+  - [x] Added the TypeScript strictness config object: `no-explicit-any: error`, `no-non-null-assertion: error`, plus a `no-unused-vars` config that allows `_`-prefixed args/vars (standard convention; needed because the contract method args in stub providers are part of the interface contract even when stubs don't read them).
+  - [x] **Bonus fix:** `pnpm lint` was actually broken from Story 1.1 — the script was `next lint` but Next.js 16.2 removed that subcommand entirely, so the gate was silently failing in CI ("Invalid project directory provided, no such directory: …/lint"). Fixed by changing `package.json` lint script to `eslint .` and adding `coverage/`, `storybook-static/`, `test-results/`, `playwright-report/`, `.lighthouseci/`, `*.tsbuildinfo` to `globalIgnores` so ESLint stops trying to lint build artifacts. This is a Story-1.1 carry-over defect — flagged in the Change Log below for retrospective awareness.
+  - [x] Verified `pnpm lint` is green (exit 0, zero violations).
+  - [x] Verified the new rule fires correctly with a synthetic violation file (caught both `@mediapipe/tasks-vision` import and direct `@/lib/providers/mock/*` import — 2 errors as expected).
 
-- [ ] **Task 9: Update `.env.example`** (AC2, AC5)
-  - [ ] Add `NEXT_PUBLIC_PROVIDER_MODE=mock` with a comment explaining valid values (`mock` | `production`) and that mock is the Demo V1 default
-  - [ ] Add per-provider override example: `# NEXT_PUBLIC_AR_PROVIDER=mediapipe  # Override individual providers during development`
+- [x] **Task 9: Update `.env.example`** (AC2, AC5)
+  - [x] Already populated correctly during Story 1.1 (foresight): `NEXT_PUBLIC_PROVIDER_MODE=mock` plus all 10 commented per-provider override lines. Verified contents match what AC2 requires; no edit needed.
 
-- [ ] **Task 10: Author `src/lib/providers/contracts/index.test.ts`** (AC6)
-  - [ ] Import `createProviders` and `createMockProviders` from `@/lib/providers`
-  - [ ] Test: both functions return objects with all 10 keys
-  - [ ] Test: each value is non-null and has the expected method names (check `typeof providers.ar.prewarm === "function"` etc.)
-  - [ ] Test: calling a stub method (e.g. `await providers.ar.prewarm()`) rejects with `ProviderError` where `code === "NOT_IMPLEMENTED"`
-  - [ ] Test: `createMockProviders()` result is independent of `process.env.NEXT_PUBLIC_PROVIDER_MODE` (set env to `"production"` in test, still returns mock stubs)
-  - [ ] Run `pnpm test:unit` and confirm green
+- [x] **Task 10: Author `src/lib/providers/contracts/index.test.ts`** (AC6)
+  - [x] Imports `ProviderError`, `createProviders`, `createMockProviders`, `Providers` from `@/lib/providers`.
+  - [x] Asserts both factories return objects with all 10 required keys, each non-null and with the expected method shape (per a `METHOD_SHAPE` map covering all 47 contract methods).
+  - [x] Exercises **every contract method on every stub** via an `INVOKE` map of plausible no-op argument bundles, asserting each `rejects.toBeInstanceOf(ProviderError)` and `code === "NOT_IMPLEMENTED"`. This dual-purpose: (a) catches stubs that silently return `undefined` instead of throwing; (b) forces downstream stories that replace stubs to update or remove the corresponding assertions.
+  - [x] Asserts `createMockProviders()` is env-var-independent (test sets `NEXT_PUBLIC_PROVIDER_MODE=production` and expects mock instances back).
+  - [x] Asserts `createProviders()` per-slot override branches: garbage value falls through to global, `NEXT_PUBLIC_AR_PROVIDER=mock` and `=production` both work without crashing, `NEXT_PUBLIC_PROVIDER_MODE=production` falls through to mock for Demo V1.
+  - [x] Added `src/lib/providers/context.test.tsx` to cover `useProvider` hook (renders a probe inside `<ProvidersContext.Provider>` and asserts the hook returns the expected provider; also asserts the "used outside provider" error path).
+  - [x] `pnpm test:unit` green: **60 tests pass / 100% statement / 100% branch / 100% function / 100% line coverage** on `src/lib/**`.
 
-- [ ] **Task 11: Smoke-test the full gate chain**
-  - [ ] `pnpm typecheck` — zero errors (strict mode on new provider files)
-  - [ ] `pnpm lint` — zero violations (new ESLint rules must not fire on provider files themselves)
-  - [ ] `pnpm test:unit` — contract test passes + existing `utils.test.ts` still passes
-  - [ ] `pnpm build` — production build compiles without errors
-  - [ ] `pnpm dev` — dev server starts; root route renders (providers are wired but produce no visible UI change)
+- [x] **Task 11: Smoke-test the full gate chain**
+  - [x] `pnpm typecheck` — exit 0, zero errors.
+  - [x] `pnpm lint` — exit 0, zero violations. (Required the Task 8 bonus fix to even run; was silently broken before.)
+  - [x] `pnpm test:unit` — 60/60 passing, 100% coverage on `src/lib/**` (NFR39 ≥70% threshold passes comfortably).
+  - [x] `pnpm build` — production build compiles successfully (4 pages prerendered including `/_not-found`). Required the Task 7 RSC fix (constructing providers inside the client component) to pass.
+  - [x] `pnpm size-limit` — 204.07 KB / 300 KB gzipped (NFR8 budget), up from 194 KB in Story 1.1. The +10 KB is `@tanstack/react-query`'s runtime, which is now wired into `RootProviders`. Still well under budget.
+  - [x] `pnpm dev` skipped — covered by the Playwright e2e suite which auto-starts `pnpm dev` and hits the root route. Build success is the stronger smoke-test signal.
+
+### Review Findings
+
+#### Decision-Needed
+
+- [x] [Review][Decision] **Production branch is dead code — all `make*()` ignore `_mode`** — Resolved: AC2 amended with explicit Demo V1 carve-out note. No code change. Production wiring is a localized edit to each `make*()` when the vendor implementation ships (post-funding).
+- [x] [Review][Decision] **Barrel (`index.ts`) re-exports `"use client"` symbols without a `"use client"` directive** — Resolved: leave as-is. Next.js 16 handles the bundler boundary at the consuming file correctly. No action taken.
+- [x] [Review][Decision] **`layout.tsx` deviates from AC4 canonical text — `<RootProviders>` vs `<ProvidersContext.Provider value={createProviders()}>` on the server** — Resolved: leave as-is. Dev notes document the RSC serialization constraint; epics.md amendment deferred as low priority.
+
+#### Patch
+
+- [x] [Review][Patch] **`root-providers.tsx` missing `.stories.tsx`** — Created `src/components/root-providers.stories.tsx` [`sb-tryon/src/components/root-providers.tsx`]
+- [x] [Review][Patch] **`root-providers.tsx` missing `.test.tsx`** — Created `src/components/root-providers.test.tsx` with 3 tests [`sb-tryon/src/components/root-providers.tsx`]
+- [x] [Review][Patch] **`no-restricted-syntax` rule for raw `<input type="file">` missing** — Added to `eslint.config.mjs` (JSX selector) [`sb-tryon/eslint.config.mjs`]
+- [x] [Review][Patch] **`eslint .` drops `@next/next/*` plugin rules** — DISMISSED: `eslint.config.mjs` already imports `nextVitals` and `nextTs` from `eslint-config-next`; rules are present.
+- [x] [Review][Patch] **Mock stubs sleep 50-200ms in tests — no `NODE_ENV=test` bypass** — Added `if (process.env.NODE_ENV === "test") return Promise.resolve()` with `/* c8 ignore next 2 */` to all 10 mock `sleep()` functions [`sb-tryon/src/lib/providers/mock/Mock*.ts`]
+- [x] [Review][Patch] **`resolveGlobalMode` silently falls back on env var typos — no warning** — Added `console.warn` for unrecognized non-empty values; test added to `index.test.ts` [`sb-tryon/src/lib/providers/factory.ts`]
+- [x] [Review][Patch] **`context.tsx` imports `Providers` from `./factory` directly** — DISMISSED: would create a circular import (`index.ts` → `context.tsx` → `index.ts`). Intra-library direct import is correct here.
+- [x] [Review][Patch] **`no-restricted-imports` exempts `mock/**` from `@supabase/*` ban incorrectly** — Restructured into two separate rule objects: Part A (`@mediapipe/*`, `twilio/@sendgrid/*`) exempts `mock/**` + `production/**`; Part B (`@supabase/*`, barrel enforcement) exempts `production/**` only [`sb-tryon/eslint.config.mjs`]
+- [x] [Review][Patch] **`void _x` + missing `await` in mock stub methods** — Removed all `void _x` lines (redundant with `_`-prefix); added `await` to all `return this.notImplemented(...)` calls across all 10 mocks [`sb-tryon/src/lib/providers/mock/Mock*.ts`]
+
+#### Deferred
+
+- [x] [Review][Defer] **`ProviderError` missing `Object.setPrototypeOf` — `instanceof` breaks below ES2015 target** [`sb-tryon/src/lib/providers/errors.ts`] — deferred, pre-existing; current tsconfig target is ES2015+, not a live risk
+- [x] [Review][Defer] **`factory.ts` statically imports all 10 Mock classes — inflates server bundle** [`sb-tryon/src/lib/providers/factory.ts`] — deferred, pre-existing; acceptable for Demo V1, revisit before Production V1
 
 ## Dev Notes
 
@@ -737,16 +765,75 @@ Stories that depend on this story's output must find the following exports worki
 
 ### Agent Model Used
 
-claude-sonnet-4-6 (create-story workflow, 2026-05-03)
+- claude-sonnet-4-6 (create-story workflow, 2026-05-03)
+- claude-sonnet-4-6 (dev-story workflow, 2026-05-04)
 
 ### Debug Log References
 
-_None yet — pre-implementation_
+- **TS narrowing in `factory.ts`**: First implementation used a loop over `PROVIDER_KEYS` with `result[slot] = instantiate(slot, ...)` and a generic `instantiate<K>` reading from a homomorphic mock-factory map. TypeScript widened the value type to the intersection of all provider interfaces and rejected the assignment (ts2322). Fix: replaced the loop with explicit per-slot construction via 10 dedicated `make*()` helpers and a single object literal. TS narrows each property contextually; zero `any` casts.
+- **`pnpm lint` broken from Story 1.1**: Script was `next lint`, but Next.js 16.2 removed the `lint` subcommand. Symptom: "Invalid project directory provided, no such directory: …/lint", exit 1. CI was treating this as a hard failure but Story 1.1's smoke test recorded it as `✓ zero errors` — likely a misread. Fixed in this story by switching to `eslint .` and broadening `globalIgnores` to cover build/test artifacts.
+- **RSC class-instance serialization**: Initial `layout.tsx` wiring constructed providers via `createProviders()` server-side and passed them as a prop to `<RootProviders>`. Build failed with "Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported." Fixed by moving construction inside `RootProviders` via `useState(() => createProviders())`. Server Components needing providers call `createProviders()` directly (architecture §4 explicitly supports both Server and Client paths).
+- **Coverage gate**: First contract test draft only sampled 5 methods; coverage came in at 32% lines (below the 70% threshold) because most stub method bodies were never executed. Fixed by adding an `INVOKE` map covering all 47 contract methods plus per-slot env-override branches; coverage rose to 100% across all four metrics.
 
 ### Completion Notes List
 
-_To be filled in by dev agent after implementation_
+- All 6 ACs satisfied; all 11 tasks (with subtasks) complete and verified by green CI gates.
+- 100% coverage on `src/lib/**` (statements, branches, functions, lines) — NFR39 ≥70% target exceeded.
+- Bundle size: 204.07 KB / 300 KB gzipped (up +10 KB from Story 1.1; the delta is `@tanstack/react-query`'s runtime now wired into `RootProviders`).
+- Provider contracts are vendor-import-free at the type level (every contract type is self-contained; verified with `grep` and by lint).
+- Stub mocks do realistic 50-200ms latency before throwing — demo will not feel suspiciously instant once real flows are added in Story 1.5+.
+- ESLint rule fires correctly on synthetic violations (verified with a temporary `_synthetic-test.tsx` file: caught `@mediapipe/*` and `@/lib/providers/mock/*` imports as 2 errors).
+- Pre-existing Storybook example assets in `src/stories/` (Button.tsx, Header.tsx, Page.tsx and accompanying CSS/PNGs) are untouched; Story 1.3 will replace them with real component stories.
+- `useProvider` hook is strictly typed via 10 function overloads — `useProvider("ar")` returns `ARProvider`, etc., with zero `any` casts in the public type signature.
 
 ### File List
 
-_To be filled in by dev agent after implementation_
+**New files:**
+- `sb-tryon/src/lib/providers/errors.ts`
+- `sb-tryon/src/lib/providers/errors.test.ts`
+- `sb-tryon/src/lib/providers/contracts/ar-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/review-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/auth-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/attribution-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/notification-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/booking-handoff-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/salon-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/bsg-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/calendar-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/editorial-provider.ts`
+- `sb-tryon/src/lib/providers/contracts/index.test.ts`
+- `sb-tryon/src/lib/providers/mock/MockARProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockReviewProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockAuthProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockAttributionProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockNotificationProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockBookingHandoffProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockSalonProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockBSGProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockCalendarProvider.ts`
+- `sb-tryon/src/lib/providers/mock/MockEditorialProvider.ts`
+- `sb-tryon/src/lib/providers/production/README.md`
+- `sb-tryon/src/lib/providers/factory.ts`
+- `sb-tryon/src/lib/providers/context.tsx`
+- `sb-tryon/src/lib/providers/context.test.tsx`
+- `sb-tryon/src/lib/providers/index.ts`
+- `sb-tryon/src/components/root-providers.tsx`
+
+**Modified files:**
+- `sb-tryon/src/app/layout.tsx` — wraps children in `<RootProviders>`; updates metadata title + description
+- `sb-tryon/eslint.config.mjs` — adds vendor-import restriction rule, TS strictness rules, broadened `globalIgnores`
+- `sb-tryon/package.json` — `lint` script changed from `next lint` to `eslint .` (Story 1.1 carry-over defect; see Change Log)
+
+**Unchanged (deliberately):**
+- `sb-tryon/.env.example` — already populated with `NEXT_PUBLIC_PROVIDER_MODE=mock` and per-slot overrides during Story 1.1.
+- `sb-tryon/src/lib/utils.ts`, `sb-tryon/src/lib/utils.test.ts` — Story 1.1 scaffolding, untouched.
+- `sb-tryon/src/stories/**` — create-next-app / shadcn onboarding examples, untouched (replaced in Story 1.3).
+
+### Change Log
+
+| Date | Change | Author |
+|---|---|---|
+| 2026-05-03 | Story dev guide created (create-story workflow) | claude-sonnet-4-6 |
+| 2026-05-04 | Story implemented — 10 provider contracts, factory, ProvidersContext, useProvider hook (10 overloads), 10 stub mocks with 50-200ms latency + NOT_IMPLEMENTED throws, ESLint vendor-import rule, root-providers client wrapper. 60 unit tests, 100% coverage on src/lib/**. | claude-sonnet-4-6 |
+| 2026-05-04 | **Carry-over fix from Story 1.1**: repaired broken `pnpm lint` script (`next lint` → `eslint .`); added `coverage/`, `storybook-static/`, `test-results/`, `playwright-report/`, `.lighthouseci/`, `*.tsbuildinfo` to ESLint global ignores. Story 1.1's lint gate had been silently failing in CI. Flag for Epic 1 retrospective. | claude-sonnet-4-6 |
+| 2026-05-04 | **Architecture clarification**: provider construction moved from `layout.tsx` (Server) to `RootProviders` (Client) via `useState(() => createProviders())`. Reason: Next.js RSC serialization rejects class instances crossing Server→Client. Server Components needing providers call `createProviders()` directly. The architecture §4 already supports both call sites, so no architecture amendment is needed — only the Story 1.2 dev-guide example was misleading and is corrected by this implementation. | claude-sonnet-4-6 |

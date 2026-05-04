@@ -23,8 +23,9 @@ Planning complete. Demo V1 implementation underway in [`sb-tryon/`](sb-tryon/).
 
 **Implementation (in progress):**
 - ✅ Story 1.1 — Next.js + shadcn scaffold + 7 CI gates (typecheck, lint, unit ≥70% coverage, E2E, bundle-size, Lighthouse, story coverage) + Chromatic visual regression
-- 🟡 Story 1.2 — provider contracts + factory + ProvidersContext + ESLint vendor-isolation rule (ready-for-dev; spec in [_bmad-output/implementation-artifacts/1-2-...](_bmad-output/implementation-artifacts/1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement.md))
-- 📋 Stories 1.3–8.7 — backlog (see [sprint-status.yaml](_bmad-output/implementation-artifacts/sprint-status.yaml))
+- ✅ Story 1.2 — 10 provider contracts + factory + `<ProvidersContext>` + 10-overload `useProvider` hook + ESLint vendor-isolation rule. Stub mocks throw `ProviderError("NOT_IMPLEMENTED")` until later stories fill them in. 64 unit tests / 100% coverage on `src/lib/**`.
+- 📋 Story 1.3 (next) — OKLCH design tokens + shadcn/Radix UI primitives + Storybook scaffolding + axe-core integration
+- 📋 Stories 1.4–8.7 — backlog (see [sprint-status.yaml](_bmad-output/implementation-artifacts/sprint-status.yaml))
 
 **Phasing model (binding):** Demo V1 (now, 8 weeks, runs locally on laptop + mobile, mocked vendors via provider abstractions, walked through to Sally Beauty execs) → Production V1 (post-funding, 16 weeks, same codebase, real vendors, cloud-deployed in DFW with full BIPA / TX CUBI / GDPR compliance). The mock→production swap is enforced as a config + procurement change by the provider abstraction; ESLint blocks any feature code from importing vendor SDKs directly.
 
@@ -113,7 +114,7 @@ cp .env.example .env.local                           # all defaults work for Dem
 |---|---|
 | `pnpm dev` | Start Next.js dev server at http://localhost:3000 |
 | `pnpm typecheck` | TypeScript strict, zero errors expected |
-| `pnpm lint` | ESLint including the provider-import-restriction rule (Story 1.2) |
+| `pnpm lint` | ESLint including the provider-import-restriction rule + TS strictness (`no-explicit-any`, `no-non-null-assertion`) |
 | `pnpm test:unit` | Vitest with ≥70% coverage on `src/lib/**` |
 | `pnpm test:e2e` | Playwright across Chromium + WebKit + Firefox |
 | `pnpm storybook` | Storybook dev at http://localhost:6006 |

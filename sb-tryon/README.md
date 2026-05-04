@@ -19,9 +19,11 @@ The Demo V1 codebase for the Sally Beauty hair color try-on app.
 
 ## Provider pattern (the architectural spine)
 
-Every external dependency — MediaPipe, Twilio, SendGrid, Sally Rewards SSO, BSG, Booksy/Vagaro/Square, Google Places, etc. — sits behind one of 10 provider interfaces in [`src/lib/providers/contracts/`](src/lib/providers/) (lands in Story 1.2). Feature code imports from `@/lib/providers`, never from a vendor SDK directly. ESLint enforces this.
+Every external dependency — MediaPipe, Twilio, SendGrid, Sally Rewards SSO, BSG, Booksy/Vagaro/Square, Google Places, etc. — sits behind one of 10 provider interfaces in [`src/lib/providers/contracts/`](src/lib/providers/contracts/). Feature code imports from `@/lib/providers`, never from a vendor SDK directly. ESLint enforces this — see the `no-restricted-imports` rule in [`eslint.config.mjs`](eslint.config.mjs).
 
-The Demo V1 → Production V1 transition is an env-var swap (`NEXT_PUBLIC_PROVIDER_MODE=mock` → `production`) plus procurement, not a code change in business logic. That's the single-codebase commitment (NFR35) — and it's mechanically defensible, not aspirational.
+**Server Components** call `createProviders()` directly from `@/lib/providers`. **Client Components** read providers via the strictly-typed `useProvider()` hook (10 function overloads, zero `any` casts) inside the `<ProvidersContext.Provider>` populated by [`<RootProviders>`](src/components/root-providers.tsx). Construction lives client-side because Next.js RSC serialization rejects class instances crossing the Server→Client boundary.
+
+The Demo V1 → Production V1 transition is an env-var swap (`NEXT_PUBLIC_PROVIDER_MODE=mock` → `production`) plus procurement, not a code change in business logic. That's the single-codebase commitment (NFR35) — and it's mechanically defensible, not aspirational. Current status: 10 contracts live; 10 stub mocks throwing `ProviderError("NOT_IMPLEMENTED")` until later stories fill them in (Story 1.5 wires MediaPipe-backed `MockARProvider`, Story 2.1 the `MockEditorialProvider`, Story 3.1 `MockReviewProvider`, etc.).
 
 ## Prerequisites
 
@@ -48,7 +50,7 @@ Open http://localhost:3000.
 | `pnpm build` | Production build |
 | `pnpm start` | Run the production build |
 | `pnpm typecheck` | `tsc --noEmit`, strict |
-| `pnpm lint` | ESLint (Next + Storybook configs; provider-import rule lands in Story 1.2) |
+| `pnpm lint` | ESLint — Next + Storybook configs + provider-import-restriction rule + TS strictness (no-explicit-any, no-non-null-assertion) |
 | `pnpm test:unit` | Vitest with v8 coverage; threshold ≥70% on `src/lib/**` |
 | `pnpm test:unit:watch` | Vitest in watch mode |
 | `pnpm test:storybook` | Storybook component tests via Vitest |
@@ -81,7 +83,9 @@ sb-tryon/
 │   ├── (operator)/              # density-compact + Pro Tool direction
 │   ├── (stylist)/               # iPad chair-side
 │   ├── api/                     # Route Handlers
-│   ├── layout.tsx               # Root layout — ProvidersContext, QueryClient (Story 1.2 wires these)
+│   ├── layout.tsx               # Root layout — Server Component; wraps children in <RootProviders>
+├── src/components/
+│   ├── root-providers.tsx       # "use client" wrapper: QueryClientProvider + ProvidersContext.Provider
 │   └── page.tsx                 # Home / value-prop landing
 ├── src/components/              # UI components — colocated .test.tsx + .stories.tsx
 │   ├── ui/                      # shadcn/Radix primitives (Story 1.3)
@@ -96,7 +100,7 @@ sb-tryon/
 ├── .github/workflows/           # CI + Chromatic
 ├── AGENTS.md                    # ← read this before changing anything
 ├── CLAUDE.md                    # @AGENTS.md (Claude Code import directive)
-└── eslint.config.mjs            # Next + Storybook + provider-import rule (Story 1.2)
+└── eslint.config.mjs            # Next + Storybook + provider-import rule + TS strictness
 ```
 
 For the full target file tree (post-Story-1.2 onward), see [architecture.md §6](../_bmad-output/planning-artifacts/architecture.md).
@@ -104,8 +108,9 @@ For the full target file tree (post-Story-1.2 onward), see [architecture.md §6]
 ## Status
 
 - ✅ Story 1.1 — scaffold + 7 CI gates + Chromatic ([dev guide](../_bmad-output/implementation-artifacts/1-1-initialize-nextjs-shadcn-project-scaffold-with-ci-gates.md))
-- 🟡 Story 1.2 — provider contracts + factory + ProvidersContext + ESLint vendor-isolation ([dev guide](../_bmad-output/implementation-artifacts/1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement.md))
-- 📋 Stories 1.3 → 8.7 — backlog (see [`sprint-status.yaml`](../_bmad-output/implementation-artifacts/sprint-status.yaml))
+- ✅ Story 1.2 — 10 provider contracts + factory + `<ProvidersContext>` + `useProvider` hook + ESLint vendor-isolation ([dev guide](../_bmad-output/implementation-artifacts/1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement.md)). 64 unit tests / 100% coverage on `src/lib/**`.
+- 📋 Story 1.3 (next) — OKLCH design tokens + shadcn/Radix UI primitives + Storybook + axe-core integration
+- 📋 Stories 1.4 → 8.7 — backlog (see [`sprint-status.yaml`](../_bmad-output/implementation-artifacts/sprint-status.yaml))
 
 ## Where things are documented
 

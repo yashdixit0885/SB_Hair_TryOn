@@ -1,0 +1,33 @@
+# Local Docker Compose stack for sb-tryon.
+# Demo V1: app service only; Postgres is commented out and added in Story 1.x
+# when Production V1 persistence becomes relevant (architecture §4).
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_PROVIDER_MODE: mock
+    # Production V1 — uncomment when Drizzle schema + DATABASE_URL go live:
+    # depends_on:
+    #   - postgres
+    # environment:
+    #   DATABASE_URL: postgres://postgres:postgres@postgres:5432/sb_tryon
+
+  # postgres:
+  #   image: postgres:16-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: sb_tryon
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres-data:

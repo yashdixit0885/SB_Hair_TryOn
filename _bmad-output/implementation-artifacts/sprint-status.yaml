@@ -1,0 +1,141 @@
+# generated: 2026-05-03
+# last_updated: 2026-05-03
+# project: SB_Project
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-05-03
+last_updated: 2026-05-03  # updated by create-story: 1-2 → ready-for-dev
+project: SB_Project
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Photo Capture & Try-On Visualization
+  epic-1: in-progress
+  1-1-initialize-nextjs-shadcn-project-scaffold-with-ci-gates: done
+  1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement: ready-for-dev
+  1-3-implement-oklch-design-tokens-foundation-primitives-storybook-axe-core: backlog
+  1-4-build-cross-cutting-layout-shells: backlog
+  1-5-implement-mediapipe-tasks-vision-mockarprovider-segmentation-pipeline: backlog
+  1-6-build-photouploader-consentprompt-with-consent-state-machine: backlog
+  1-7-build-colorrender-component-texture-preserving-webgl2: backlog
+  1-8-build-fadesimulator-90-day-fade-timeline: backlog
+  1-9-build-lightingtoggle-3-calibrated-presets: backlog
+  1-10-compose-try-on-route-with-full-flow: backlog
+  1-11-build-sharelook-with-privacy-controls: backlog
+  1-12-implement-session-only-photo-retention-with-opt-in-saved-looks: backlog
+  1-13-build-demofallbackpath-honestfallback: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Color & Brand Discovery
+  epic-2: backlog
+  2-1-build-mockeditorialprovider-with-color-taxonomy-brand-mapping-fixtures: backlog
+  2-2-build-colorgrid-colorcard-for-colors-browse-surface: backlog
+  2-3-build-colors-colorslug-route-with-brand-list-ranked-by-outcome-metrics: backlog
+  2-4-build-outcomemetrics-component-for-brand-color-texture-tuples: backlog
+  2-5-build-specialtytierlabel-and-propagate-1-brand-only-unique-look-labeling: backlog
+  2-6-enforce-3-brand-standard-tier-rule-at-provider-boundary-intersection-rule-validator: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Outcome Reviews & Source Attribution
+  epic-3: backlog
+  3-1-build-mockreviewprovider-with-4-source-class-review-fixtures: backlog
+  3-2-build-sourceattributionlabel-chip-with-4-variants-provenance-popover: backlog
+  3-3-build-reviewcard-composing-outcomemetrics-sourceattributionlabel-body-reply: backlog
+  3-4-build-texturefilter-with-url-state-persistence-across-navigation: backlog
+  3-5-build-reviewsubmissionform-with-multi-step-weight-6-outcome-dimensions: backlog
+  3-6-enforce-color-outcome-only-public-ranking-private-stylist-salon-dimensions-to-partners: backlog
+  3-7-implement-brand-published-review-tab-segregation: backlog
+  3-8-enforce-native-review-immutability-tos-only-deletion-path-retention-after-brand-termination: backlog
+  3-9-display-third-party-ingested-reviews-verbatim-brandreplyaffordance: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Salon Discovery & Booking Handoff
+  epic-4: backlog
+  4-1-build-mocksalonprovider-with-10-curated-dfw-salon-fixtures-search-index: backlog
+  4-2-build-salonsearch-on-salons-route-with-location-radius-color-texture-filters: backlog
+  4-3-build-salons-city-salonslug-profile-with-certifications-accuracy-ratings: backlog
+  4-4-build-stylistscorecard-consumer-variant-with-texture-certifications: backlog
+  4-5-build-saved-look-mechanism-lookid-persistence-precondition-for-fr25-fr27: backlog
+  4-6-build-attribution-token-signer-api-attribution-issue-route-handler: backlog
+  4-7-build-bookinghandoff-deep-link-with-preserved-context-attribution-token: backlog
+  4-8-build-idempotent-api-webhooks-booking-receiver: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Stylist Workflow & In-Chair Tools
+  epic-5: backlog
+  5-1-build-mockcalendarprovider-mock-calendar-invite-flow: backlog
+  5-2-implement-stylist-auth-role-stylist-route-gate-via-authprovider: backlog
+  5-3-build-savedlookview-at-stylist-look-lookid-ipad-landscape-optimized: backlog
+  5-4-build-inchairreviewsubmission-with-stylist-assisted-on-behalf-of-attribution-verbal-consent-capture: backlog
+  5-5-build-styliststats-color-accuracy-aggregated-by-texture: backlog
+  5-6-build-stylist-monthly-attributed-booking-count-dashboard-surface: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Salon Partner Operations
+  epic-6: backlog
+  6-1-build-mockattributionprovider-with-sample-attribution-fixtures: backlog
+  6-2-implement-salonpartner-auth-role-operator-dashboard-route-gate: backlog
+  6-3-build-operator-dashboard-shell-with-density-compact-layout-sidebar-navigation: backlog
+  6-4-build-attributedbookings-component-on-operator-dashboard: backlog
+  6-5-build-per-stylist-scorecard-view-at-operator-dashboard-stylists-with-private-3-dimension-display: backlog
+  6-6-build-brandpullthrough-analytics-view: backlog
+  6-7-build-mockbsgprovider-bsgreordercard-one-tap-reorder: backlog
+  6-8-build-certificationmanager-for-color-specific-salon-stylist-certifications: backlog
+  6-9-build-reviewreplyqueue-with-public-reply-composer-delete-alter-prevention: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Editorial Administration
+  epic-7: backlog
+  7-1-build-editorialprovider-write-side-contract-audit-log-schema: backlog
+  7-2-implement-editorialcurator-auth-role-operator-admin-route-gate: backlog
+  7-3-build-taxonomyadmin-color-taxonomy-editor: backlog
+  7-4-build-brand-sku-to-canonical-mapping-editor-with-full-audit-logging: backlog
+  7-5-build-specialty-tier-flagging-surface: backlog
+  7-6-build-auditqueue-with-virtualized-list-jkare-keyboard-shortcuts: backlog
+  7-7-build-brandreplymoderation-with-tos-only-rejection-reason-logging: backlog
+  7-8-build-classificationqualitymeter-false-positive-rate-metric: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: User Identity, Consent & Notifications
+  epic-8: backlog
+  8-1-implement-guest-mode-mockauthprovider-scripted-maya-identity: backlog
+  8-2-build-consent-state-machine-immutable-timestamped-audit-log: backlog
+  8-3-build-photo-data-deletion-api-account-delete-ui-with-30-day-propagation: backlog
+  8-4-implement-30-day-retention-policy-opt-in-indefinite-save-toggle: backlog
+  8-5-build-mocknotificationprovider-post-booking-trigger-sequence: backlog
+  8-6-build-sally-rewards-points-award-for-verified-post-booking-photo-reviews: backlog
+  8-7-implement-sally-rewards-oauth-2-0-pkce-auth-flow: backlog
+  epic-8-retrospective: optional

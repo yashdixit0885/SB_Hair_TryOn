@@ -1,0 +1,48 @@
+# Chromatic visual regression on every PR (architecture AR12, UX-DR15).
+# Requires the CHROMATIC_PROJECT_TOKEN secret to be set in the repository
+# Settings → Secrets → Actions. Until that is configured, the workflow runs
+# with --exit-zero-on-changes so initial baseline drift is non-blocking.
+name: Chromatic
+
+on:
+  pull_request:
+
+defaults:
+  run:
+    working-directory: ./sb-tryon
+
+jobs:
+  chromatic:
+    name: chromatic
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: sb-tryon/.nvmrc
+          cache: pnpm
+          cache-dependency-path: sb-tryon/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Storybook
+        run: pnpm build-storybook
+
+      - name: Publish to Chromatic
+        if: ${{ env.CHROMATIC_PROJECT_TOKEN != '' }}
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        run: |
+          npx chromatic \
+            --project-token=$CHROMATIC_PROJECT_TOKEN \
+            --storybook-build-dir=storybook-static \
+            --exit-zero-on-changes

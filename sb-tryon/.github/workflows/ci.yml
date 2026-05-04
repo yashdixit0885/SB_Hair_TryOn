@@ -1,0 +1,61 @@
+# CI gates per architecture §5 (enforcement guidelines) and AR12.
+# Order is binding: typecheck → lint → unit → e2e → bundle-size → lighthouse →
+# story-coverage. Earlier gates short-circuit the rest on failure.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    working-directory: ./sb-tryon
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: sb-tryon/.nvmrc
+          cache: pnpm
+          cache-dependency-path: sb-tryon/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium webkit firefox
+
+      - name: 1. Typecheck
+        run: pnpm typecheck
+
+      - name: 2. Lint
+        run: pnpm lint
+
+      - name: 3. Unit tests (Vitest, ≥70% coverage on src/lib/)
+        run: pnpm test:unit
+
+      - name: 4. E2E tests (Playwright — Maya, Janelle, Aliyah, Marcus, Elena, keyboard-only, consent, attribution)
+        run: pnpm test:e2e
+
+      - name: 5. Build
+        run: pnpm build
+
+      - name: 5b. Bundle size (≤300KB gzipped, excludes @mediapipe/*)
+        run: pnpm size-limit
+
+      - name: 6. Lighthouse CI
+        run: pnpm lhci
+
+      - name: 7. Storybook story coverage check
+        run: pnpm check:stories

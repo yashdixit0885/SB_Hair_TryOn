@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# sb-tryon
 
-## Getting Started
+The Demo V1 codebase for the Sally Beauty hair color try-on app.
 
-First, run the development server:
+> See the [root README](../README.md) for the project's strategic framing, planning chain, and reading order. See [AGENTS.md](AGENTS.md) for the binding rules every coding agent and engineer must follow before changing this codebase.
+
+## Stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| Framework | Next.js 16.2 (App Router, Turbopack) | Locked by [architecture.md §3](../_bmad-output/planning-artifacts/architecture.md) |
+| Language | TypeScript 5 (strict) | NFR35; no `any`, no `!` non-null assertions |
+| UI | Tailwind v4 + shadcn/Radix + Lucide | UX-DR1, UX-DR2 — design tokens land in Story 1.3 |
+| State | Zustand + TanStack Query v5 + URL state + IndexedDB | Four-tier ownership model; see architecture §4 |
+| AR | MediaPipe Tasks Vision + WebGL2 fragment shader (Demo V1) | Behind `ARProvider`; real SDK swap is post-funding |
+| Persistence | Drizzle ORM + Postgres (Production V1 only) | Demo V1 uses JSON fixtures via mock providers |
+| Test | Vitest 4 + axe-core + Playwright 1.59 (Chromium/WebKit/Firefox) + Storybook 10 + Chromatic | NFR23, NFR39 |
+| Build / CI | pnpm 10 + size-limit + Lighthouse CI | Budget gates block merge |
+
+## Provider pattern (the architectural spine)
+
+Every external dependency — MediaPipe, Twilio, SendGrid, Sally Rewards SSO, BSG, Booksy/Vagaro/Square, Google Places, etc. — sits behind one of 10 provider interfaces in [`src/lib/providers/contracts/`](src/lib/providers/) (lands in Story 1.2). Feature code imports from `@/lib/providers`, never from a vendor SDK directly. ESLint enforces this.
+
+The Demo V1 → Production V1 transition is an env-var swap (`NEXT_PUBLIC_PROVIDER_MODE=mock` → `production`) plus procurement, not a code change in business logic. That's the single-codebase commitment (NFR35) — and it's mechanically defensible, not aspirational.
+
+## Prerequisites
+
+- Node 20 LTS (see [`.nvmrc`](.nvmrc))
+- pnpm 10.33.2 (`corepack enable && corepack prepare pnpm@10.33.2 --activate`)
+- A Chromium-class browser for local dev. Playwright installs Chromium/WebKit/Firefox for E2E.
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install --frozen-lockfile
+pnpm dlx playwright install chromium webkit firefox
+cp .env.example .env.local                # all defaults work for Demo V1 (mock providers)
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+|---|---|
+| `pnpm dev` | Next.js dev server (Turbopack), http://localhost:3000 |
+| `pnpm build` | Production build |
+| `pnpm start` | Run the production build |
+| `pnpm typecheck` | `tsc --noEmit`, strict |
+| `pnpm lint` | ESLint (Next + Storybook configs; provider-import rule lands in Story 1.2) |
+| `pnpm test:unit` | Vitest with v8 coverage; threshold ≥70% on `src/lib/**` |
+| `pnpm test:unit:watch` | Vitest in watch mode |
+| `pnpm test:storybook` | Storybook component tests via Vitest |
+| `pnpm test:e2e` | Playwright across Chromium + WebKit + Firefox; auto-starts dev server |
+| `pnpm storybook` | Storybook dev at http://localhost:6006 |
+| `pnpm build-storybook` | Static Storybook for Chromatic |
+| `pnpm check:stories` | Asserts every `src/components/**/*.tsx` has a `.stories.tsx` |
+| `pnpm size-limit` | Bundle-size budget assertion |
+| `pnpm lhci` | Lighthouse CI against `lighthouserc.cjs` |
 
-## Learn More
+## CI gates (binding order)
 
-To learn more about Next.js, take a look at the following resources:
+CI runs every command above, in order, on every PR. Earlier failures short-circuit later gates. Configured in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and [`.github/workflows/chromatic.yml`](.github/workflows/chromatic.yml).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. `pnpm typecheck`
+2. `pnpm lint`
+3. `pnpm test:unit` — coverage ≥70% on `src/lib/**` (NFR39)
+4. `pnpm test:e2e` — 5 personas + keyboard-only + consent + attribution suites (NFR23, NFR29)
+5. `pnpm build` + `pnpm size-limit` — bundle ≤300KB gzipped excluding `@mediapipe/*` (NFR8)
+6. `pnpm lhci` — Web Vitals budgets (NFR5, NFR8)
+7. `pnpm check:stories` — every component has a story (UX-DR15)
+8. Chromatic — visual regression; designer reviews any change
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project layout
 
-## Deploy on Vercel
+```
+sb-tryon/
+├── src/app/                     # Next.js App Router routes (≤150 lines per route file)
+│   ├── (consumer)/              # density-comfortable + Editorial Magazine direction
+│   ├── (operator)/              # density-compact + Pro Tool direction
+│   ├── (stylist)/               # iPad chair-side
+│   ├── api/                     # Route Handlers
+│   ├── layout.tsx               # Root layout — ProvidersContext, QueryClient (Story 1.2 wires these)
+│   └── page.tsx                 # Home / value-prop landing
+├── src/components/              # UI components — colocated .test.tsx + .stories.tsx
+│   ├── ui/                      # shadcn/Radix primitives (Story 1.3)
+│   ├── render/                  # AR render surface (Epic 1)
+│   ├── reviews/, discovery/, dashboard/, stylist/, layout/
+├── src/lib/                     # Shared logic, no JSX
+│   ├── providers/               # Provider abstractions: contracts/, mock/, production/, factory.ts, context.tsx
+│   ├── ar/, security/, observability/, auth/, notifications/, reviews/, color-science/, …
+│   └── stores/, queries/, schemas/, fixtures/, db/
+├── e2e/                         # Playwright (5 persona journeys + keyboard-only + consent + attribution)
+├── .storybook/                  # Storybook config
+├── .github/workflows/           # CI + Chromatic
+├── AGENTS.md                    # ← read this before changing anything
+├── CLAUDE.md                    # @AGENTS.md (Claude Code import directive)
+└── eslint.config.mjs            # Next + Storybook + provider-import rule (Story 1.2)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+For the full target file tree (post-Story-1.2 onward), see [architecture.md §6](../_bmad-output/planning-artifacts/architecture.md).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Status
+
+- ✅ Story 1.1 — scaffold + 7 CI gates + Chromatic ([dev guide](../_bmad-output/implementation-artifacts/1-1-initialize-nextjs-shadcn-project-scaffold-with-ci-gates.md))
+- 🟡 Story 1.2 — provider contracts + factory + ProvidersContext + ESLint vendor-isolation ([dev guide](../_bmad-output/implementation-artifacts/1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement.md))
+- 📋 Stories 1.3 → 8.7 — backlog (see [`sprint-status.yaml`](../_bmad-output/implementation-artifacts/sprint-status.yaml))
+
+## Where things are documented
+
+| Question | Source |
+|---|---|
+| What pattern should I use? | [`AGENTS.md`](AGENTS.md) — agent rulebook, binding |
+| Why was X chosen? | [`architecture.md`](../_bmad-output/planning-artifacts/architecture.md) — decision document |
+| What's in scope for V1? | [`prd.md`](../_bmad-output/planning-artifacts/prd.md) — 50 FRs / 43 NFRs |
+| How should this look? | [`ux-design-specification.md`](../_bmad-output/planning-artifacts/ux-design-specification.md) — component inventory + journeys |
+| What story am I on? | [`sprint-status.yaml`](../_bmad-output/implementation-artifacts/sprint-status.yaml) — authoritative state |
+| What's deferred? | [`deferred-work.md`](../_bmad-output/implementation-artifacts/deferred-work.md) — items pushed to later stories |
+
+If `AGENTS.md` and `architecture.md` disagree, the architecture wins; PR a fix to `AGENTS.md` in the same change set.

@@ -10,7 +10,7 @@ The Demo V1 codebase for the Sally Beauty hair color try-on app.
 |---|---|---|
 | Framework | Next.js 16.2 (App Router, Turbopack) | Locked by [architecture.md §3](../_bmad-output/planning-artifacts/architecture.md) |
 | Language | TypeScript 5 (strict) | NFR35; no `any`, no `!` non-null assertions |
-| UI | Tailwind v4 + shadcn/Radix + Lucide | UX-DR1, UX-DR2 — design tokens land in Story 1.3 |
+| UI | Tailwind v4 + shadcn/Radix + Lucide | UX-DR1, UX-DR2 — OKLCH design tokens + 21 primitives live in `src/components/ui/` (Story 1.3) |
 | State | Zustand + TanStack Query v5 + URL state + IndexedDB | Four-tier ownership model; see architecture §4 |
 | AR | MediaPipe Tasks Vision + WebGL2 fragment shader (Demo V1) | Behind `ARProvider`; real SDK swap is post-funding |
 | Persistence | Drizzle ORM + Postgres (Production V1 only) | Demo V1 uses JSON fixtures via mock providers |
@@ -109,8 +109,9 @@ For the full target file tree (post-Story-1.2 onward), see [architecture.md §6]
 
 - ✅ Story 1.1 — scaffold + 7 CI gates + Chromatic ([dev guide](../_bmad-output/implementation-artifacts/1-1-initialize-nextjs-shadcn-project-scaffold-with-ci-gates.md))
 - ✅ Story 1.2 — 10 provider contracts + factory + `<ProvidersContext>` + `useProvider` hook + ESLint vendor-isolation ([dev guide](../_bmad-output/implementation-artifacts/1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement.md)). 64 unit tests / 100% coverage on `src/lib/**`.
-- 📋 Story 1.3 (next) — OKLCH design tokens + shadcn/Radix UI primitives + Storybook + axe-core integration
-- 📋 Stories 1.4 → 8.7 — backlog (see [`sprint-status.yaml`](../_bmad-output/implementation-artifacts/sprint-status.yaml))
+- ✅ Story 1.3 — OKLCH design tokens (`globals.css @theme` with `--color-*`, `--radius-*`, `--shadow-*` tokens) + 21 Radix-wrapped primitives in [`src/components/ui/`](src/components/ui/) + Storybook 10 with `ProvidersContext` global decorator + in-house `toHaveNoViolations` axe matcher in [`src/test-utils/`](src/test-utils/). `renderWithProviders()` wraps RTL with all 10 mock providers. 102 unit tests / 53 Storybook stories (all tagged `a11y.test = "error"`). ([dev guide](../_bmad-output/implementation-artifacts/1-3-implement-oklch-design-tokens-foundation-primitives-storybook-axe-core.md))
+- 📋 Story 1.4 (next) — cross-cutting layout shells
+- 📋 Stories 1.5 → 8.7 — backlog (see [`sprint-status.yaml`](../_bmad-output/implementation-artifacts/sprint-status.yaml))
 
 ## Where things are documented
 

@@ -24,8 +24,9 @@ Planning complete. Demo V1 implementation underway in [`sb-tryon/`](sb-tryon/).
 **Implementation (in progress):**
 - ✅ Story 1.1 — Next.js + shadcn scaffold + 7 CI gates (typecheck, lint, unit ≥70% coverage, E2E, bundle-size, Lighthouse, story coverage) + Chromatic visual regression
 - ✅ Story 1.2 — 10 provider contracts + factory + `<ProvidersContext>` + 10-overload `useProvider` hook + ESLint vendor-isolation rule. Stub mocks throw `ProviderError("NOT_IMPLEMENTED")` until later stories fill them in. 64 unit tests / 100% coverage on `src/lib/**`.
-- 📋 Story 1.3 (next) — OKLCH design tokens + shadcn/Radix UI primitives + Storybook scaffolding + axe-core integration
-- 📋 Stories 1.4–8.7 — backlog (see [sprint-status.yaml](_bmad-output/implementation-artifacts/sprint-status.yaml))
+- ✅ Story 1.3 — OKLCH design tokens in `globals.css @theme` + 21 shadcn/Radix primitives in `src/components/ui/` + Storybook 10 with `ProvidersContext` global decorator + in-house `toHaveNoViolations` axe matcher. 102 unit tests / 53 Storybook stories (all with `a11y.test = "error"`).
+- 📋 Story 1.4 (next) — cross-cutting layout shells
+- 📋 Stories 1.5–8.7 — backlog (see [sprint-status.yaml](_bmad-output/implementation-artifacts/sprint-status.yaml))
 
 **Phasing model (binding):** Demo V1 (now, 8 weeks, runs locally on laptop + mobile, mocked vendors via provider abstractions, walked through to Sally Beauty execs) → Production V1 (post-funding, 16 weeks, same codebase, real vendors, cloud-deployed in DFW with full BIPA / TX CUBI / GDPR compliance). The mock→production swap is enforced as a config + procurement change by the provider abstraction; ESLint blocks any feature code from importing vendor SDKs directly.
 

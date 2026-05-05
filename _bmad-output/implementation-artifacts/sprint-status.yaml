@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-03
-last_updated: 2026-05-04  # 1-2 → done (code review complete)
+last_updated: 2026-05-05  # 1-3 → done (code review complete; all 4 groups reviewed, patches applied)
 project: SB_Project
 project_key: NOKEY
 tracking_system: file-system
@@ -46,7 +46,7 @@ development_status:
   epic-1: in-progress
   1-1-initialize-nextjs-shadcn-project-scaffold-with-ci-gates: done
   1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement: done
-  1-3-implement-oklch-design-tokens-foundation-primitives-storybook-axe-core: backlog
+  1-3-implement-oklch-design-tokens-foundation-primitives-storybook-axe-core: done
   1-4-build-cross-cutting-layout-shells: backlog
   1-5-implement-mediapipe-tasks-vision-mockarprovider-segmentation-pipeline: backlog
   1-6-build-photouploader-consentprompt-with-consent-state-machine: backlog

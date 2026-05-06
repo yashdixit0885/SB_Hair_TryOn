@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-03
-last_updated: 2026-05-05  # 1-3 → done (code review complete; all 4 groups reviewed, patches applied)
+last_updated: 2026-05-06  # 1-4 → done (code review complete; 2 patches applied: AC5 data-density violation on AppHeader, async querySelector in toast test)
 project: SB_Project
 project_key: NOKEY
 tracking_system: file-system
@@ -47,7 +47,7 @@ development_status:
   1-1-initialize-nextjs-shadcn-project-scaffold-with-ci-gates: done
   1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement: done
   1-3-implement-oklch-design-tokens-foundation-primitives-storybook-axe-core: done
-  1-4-build-cross-cutting-layout-shells: backlog
+  1-4-build-cross-cutting-layout-shells: done
   1-5-implement-mediapipe-tasks-vision-mockarprovider-segmentation-pipeline: backlog
   1-6-build-photouploader-consentprompt-with-consent-state-machine: backlog
   1-7-build-colorrender-component-texture-preserving-webgl2: backlog

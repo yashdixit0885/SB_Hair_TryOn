@@ -86,11 +86,13 @@ sb-tryon/
 │   ├── layout.tsx               # Root layout — Server Component; wraps children in <RootProviders>
 ├── src/components/
 │   ├── root-providers.tsx       # "use client" wrapper: QueryClientProvider + ProvidersContext.Provider
-│   └── page.tsx                 # Home / value-prop landing
+│   └── page.tsx                 # Home / value-prop landing (composes <PageShell variant="consumer">)
 ├── src/components/              # UI components — colocated .test.tsx + .stories.tsx
-│   ├── ui/                      # shadcn/Radix primitives (Story 1.3)
-│   ├── render/                  # AR render surface (Epic 1)
-│   ├── reviews/, discovery/, dashboard/, stylist/, layout/
+│   ├── ui/                      # shadcn/Radix primitives (Story 1.3) — 21 primitives
+│   ├── layout/                  # Cross-cutting shells (Story 1.4) — PageShell, AppHeader, DensityContainer,
+│   │                            #   HonestEmptyState, ToastWithProvenance, SkipToContent, ErrorBanner
+│   ├── render/                  # AR render surface (Epic 1, Story 1.5+)
+│   ├── reviews/, discovery/, dashboard/, stylist/
 ├── src/lib/                     # Shared logic, no JSX
 │   ├── providers/               # Provider abstractions: contracts/, mock/, production/, factory.ts, context.tsx
 │   ├── ar/, security/, observability/, auth/, notifications/, reviews/, color-science/, …
@@ -110,8 +112,9 @@ For the full target file tree (post-Story-1.2 onward), see [architecture.md §6]
 - ✅ Story 1.1 — scaffold + 7 CI gates + Chromatic ([dev guide](../_bmad-output/implementation-artifacts/1-1-initialize-nextjs-shadcn-project-scaffold-with-ci-gates.md))
 - ✅ Story 1.2 — 10 provider contracts + factory + `<ProvidersContext>` + `useProvider` hook + ESLint vendor-isolation ([dev guide](../_bmad-output/implementation-artifacts/1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement.md)). 64 unit tests / 100% coverage on `src/lib/**`.
 - ✅ Story 1.3 — OKLCH design tokens (`globals.css @theme` with `--color-*`, `--radius-*`, `--shadow-*` tokens) + 21 Radix-wrapped primitives in [`src/components/ui/`](src/components/ui/) + Storybook 10 with `ProvidersContext` global decorator + in-house `toHaveNoViolations` axe matcher in [`src/test-utils/`](src/test-utils/). `renderWithProviders()` wraps RTL with all 10 mock providers. 102 unit tests / 53 Storybook stories (all tagged `a11y.test = "error"`). ([dev guide](../_bmad-output/implementation-artifacts/1-3-implement-oklch-design-tokens-foundation-primitives-storybook-axe-core.md))
-- 📋 Story 1.4 (next) — cross-cutting layout shells
-- 📋 Stories 1.5 → 8.7 — backlog (see [`sprint-status.yaml`](../_bmad-output/implementation-artifacts/sprint-status.yaml))
+- ✅ Story 1.4 — 7 cross-cutting layout primitives in [`src/components/layout/`](src/components/layout/): `PageShell` (skip-link first, route-change focus-on-h1, density boundary), `AppHeader` (consumer/operator/stylist discriminated-union variants with `aria-current` page marking), `DensityContainer` (the only surface for `data-density` per AC5), `HonestEmptyState` (required `copy` prop, runtime invariant), `ToastWithProvenance` (UX honesty pattern #3), `SkipToContent` (WCAG 2.4.1 bypass block), `ErrorBanner` (`role="alert"`). `app/page.tsx` refactored to compose `<PageShell>` — all legacy `create-next-app` tokens removed. Keyboard-only Playwright spec wired for NFR23 (tab order + skip-link, cross-browser). 133 unit tests / 77 Storybook stories / 27 E2E tests across 3 browsers. Bundle 210.78 KB gzipped. ([dev guide](../_bmad-output/implementation-artifacts/1-4-build-cross-cutting-layout-shells.md))
+- 📋 Story 1.5 (next) — `MockARProvider` + MediaPipe Tasks Vision segmentation pipeline
+- 📋 Stories 1.6 → 8.7 — backlog (see [`sprint-status.yaml`](../_bmad-output/implementation-artifacts/sprint-status.yaml))
 
 ## Where things are documented
 

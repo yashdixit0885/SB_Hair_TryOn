@@ -34,6 +34,16 @@
 - **D-C3: `PopoverContent` open-state axe test absent** [`sb-tryon/src/components/ui/popover.test.tsx`] — Portal content escapes `container`; any future open-state test must target `document.body`. Add when first consumer story with `PopoverContent` is built.
 - **D-C4: `DialogClose` standalone use has no accessible-name guard** [`sb-tryon/src/components/ui/dialog.tsx`] — Exported thin wrapper with no `aria-label`; all current usages are `asChild` wrapping a `<Button>` with text, so WCAG 4.1.2 is satisfied. Add JSDoc note in Story 1.4 when `DialogClose` is first used standalone.
 
+## Deferred from: code review of 1-4-build-cross-cutting-layout-shells (2026-05-06)
+
+- **Operator variant has no `banner` landmark** [`AppHeader.tsx:86`] — `<aside role="complementary">` is intentional per spec, but AT users on operator surfaces can't navigate to a standard banner region. Revisit when operator routes ship in Story 6.x.
+- **OperatorHeader pathname match is strict equality** [`AppHeader.tsx:108`] — `pathname === s.href` returns `false` on child routes (e.g. on `/op/clients/123` when section `href` is `/op/clients`), silently breaking active indicator for all nested operator routes. Fix with `startsWith` / prefix match in Story 6.x when operator routes exist.
+- **`pnpm test:storybook` absent from CI gate chain** [`.github/workflows/ci.yml`] — AC11 requires it; likely pre-existing gap from Story 1.1 CI setup. Storybook a11y tests run locally but are not blocked by CI. Add `test:storybook` step to CI.
+- **React Strict Mode double-fires route-change focus effect in dev** [`PageShell.tsx:59–70`] — `isFirstMountRef.current` is `false` after the first Strict Mode mount cycle, so the Strict Mode remount triggers an unexpected focus on `<main>` / `<h1>` on page load in development. Production unaffected.
+- **Mobile nav links hidden below `sm` breakpoint with no alternative** [`AppHeader.tsx:56,65`] — "Browse colors", "Find a salon", "Saved looks" are hidden below 640px with no hamburger or disclosure alternative. Explicitly acknowledged in story Open Questions; deferred to Phase 6 UX polish.
+- **`role="alert"` + `aria-live="polite"` ARIA conflict** [`ErrorBanner.tsx:43–44`] — `role=alert` implies `aria-live="assertive"`; the explicit `polite` override creates implementation-defined AT behavior. Combination was mandated by AC8. Revisit with a11y specialist in a future a11y review pass.
+- **`h1.tabIndex = -1` mutation never cleaned up** [`PageShell.tsx:68`] — Route-change effect sets `h1.tabIndex = -1` and never resets it. If a future component sets `<h1 tabIndex={0}>` explicitly, PageShell will silently overwrite it on the next navigation. Add cleanup in `useEffect` return if this becomes an issue.
+
 ## Deferred from: code review of 1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement (2026-05-04)
 
 - **`ProviderError` missing `Object.setPrototypeOf`** [`sb-tryon/src/lib/providers/errors.ts`] — `instanceof ProviderError` breaks when compiled to a target below ES2015. Current tsconfig is ES2015+, so not a live risk. Fix before adding Babel transforms or lowering the target.

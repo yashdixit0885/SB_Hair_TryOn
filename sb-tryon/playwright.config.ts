@@ -21,5 +21,10 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      // Exposes /test/ar-smoke for the Janelle feasibility spec (Story 1.5).
+      // Without this flag the harness page returns 404.
+      NEXT_PUBLIC_TEST_HARNESS: "1",
+    },
   },
 });

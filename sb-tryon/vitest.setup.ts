@@ -1,4 +1,8 @@
 import "@testing-library/jest-dom/vitest";
+// Register fake IndexedDB so model-cache tests (and future saved-look code in
+// Story 1.12) can exercise the persistence layer under jsdom, which doesn't
+// ship a real IndexedDB implementation.
+import "fake-indexeddb/auto";
 import { expect } from "vitest";
 import axe from "axe-core";
 

@@ -1,5 +1,15 @@
 # Deferred Work
 
+## Deferred from: code review of 1-5-implement-mediapipe-tasks-vision-mockarprovider-segmentation-pipeline (2026-05-13)
+
+- **D-1-5-F (BLOCKING for architecture handoff step 5): AC14 Type-4 fixture photo awaited from Sally** [`sb-tryon/e2e/fixtures/photos/`] — `janelle.spec.ts` is `test.fixme`'d until a copyright-clear Type-4 reference JPEG is committed at `sb-tryon/e2e/fixtures/photos/type-4-fixture-1.jpg`. The harness, e2e spec, fixture README, and CI wiring are all in place; only the photo is missing. Sourcing requires human license verification (Pexels / Unsplash / Wikimedia Commons / model-released team photo per PRD §"Demo V1 Compliance Posture"). Once committed, the smoke test activates automatically — no code change needed. **The binary trust gate for Janelle's flow remains unvalidated until this lands.**
+
+- **D-1-5-A: Concurrent `segment()` on a single non-concurrent-safe `ImageSegmenter`** [`sb-tryon/src/lib/providers/mock/MockARProvider.ts`] — Two parallel `segment()` calls reach `segmenter.segment(image)` concurrently; MediaPipe `runningMode: "IMAGE"` is not documented as concurrent-safe and may produce undefined results or a WASM heap crash. Deferred: Story 1.7's `<ColorRender>` will own render-frame sequencing and serialize against a single live request.
+- **D-1-5-B: Shader source has no compile-time test** [`sb-tryon/src/lib/ar/color-shift.glsl.ts`] — Tests only string-match on tokens. A typo in the GLSL will not be caught until Story 1.7 runs the shader against a real WebGL2 context. Deferred: Story 1.7 browser-mode tests cover this.
+- **D-1-5-C: `MockARProvider.test.ts` counts `createFromOptions` but not `getCachedHairSegmentationModel`** [`sb-tryon/src/lib/providers/mock/MockARProvider.test.ts`] — A future regression where the dedup guard moves between cache and factory would pass this test silently. Deferred: low marginal coverage value; explicit cache test already exists in `model-cache.test.ts`.
+- **D-1-5-D: `openDb` rejection (Brave / Firefox-ETP-strict / Safari-private) crashes prewarm** [`sb-tryon/src/lib/persistence/model-cache.ts`] — Should fall through to memory-only fetch-every-session mode. Deferred: Story 1.13 (`DemoFallbackPath`) carries the user-facing fallback path; the in-cache fallback can land alongside.
+- **D-1-5-E: No `webglcontextlost` listener** [`sb-tryon/src/lib/ar/webgl-context.ts`] — Once a context is lost, all gl calls silently fail. Deferred: Story 1.7 (`<ColorRender>`) owns WebGL2 context lifecycle and will wire the lost-context handler.
+
 ## Deferred from: code review of 1-1-initialize-nextjs-shadcn-project-scaffold-with-ci-gates (2026-05-03)
 
 - **`no-restricted-imports` ESLint vendor-isolation rule absent from `eslint.config.mjs`** — Intentionally deferred to Story 1.2 per AGENTS.md §6 and story Dev Notes. Until Story 1.2 ships, direct vendor SDK imports won't be blocked by ESLint, creating false CI confidence.

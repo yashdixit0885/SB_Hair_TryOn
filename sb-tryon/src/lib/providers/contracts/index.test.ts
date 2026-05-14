@@ -263,10 +263,17 @@ describe("provider factory", () => {
   // (1.5, 2.1, 3.1, etc.) a forcing function: when they replace a stub with a
   // real mock, they must update or remove the corresponding NOT_IMPLEMENTED
   // assertions below.
+  //
+  // Slots whose stubs have been replaced by a real implementation are listed
+  // in IMPLEMENTED_SLOTS and excluded from this loop. As more stubs are
+  // replaced (2.1 reviews, 3.1 attribution, etc.), add their slot key here.
+  const IMPLEMENTED_SLOTS = new Set<keyof Providers>(["ar"]);
+
   describe("every stub method throws ProviderError(NOT_IMPLEMENTED)", () => {
     const providers = createMockProviders();
 
     for (const slot of REQUIRED_KEYS) {
+      if (IMPLEMENTED_SLOTS.has(slot)) continue;
       describe(slot, () => {
         for (const method of METHOD_SHAPE[slot]) {
           it(`${method}() rejects with NOT_IMPLEMENTED`, async () => {

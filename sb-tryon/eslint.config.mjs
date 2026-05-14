@@ -22,6 +22,10 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     ".lighthouseci/**",
     "*.tsbuildinfo",
+    // Root-level CJS config files are CommonJS by extension; the TS-aware
+    // `no-require-imports` rule shipped by eslint-config-next doesn't
+    // exempt them automatically. Their content is Node config, not app code.
+    "*.cjs",
   ]),
   ...storybook.configs["flat/recommended"],
 

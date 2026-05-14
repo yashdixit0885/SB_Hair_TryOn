@@ -1,8 +1,0 @@
-[
-  {
-    "name": "Total static JS (gzipped, all chunks — refine to initial-only in Story 1.10)",
-    "path": ".next/static/chunks/**/*.js",
-    "limit": "300 KB",
-    "gzip": true
-  }
-]

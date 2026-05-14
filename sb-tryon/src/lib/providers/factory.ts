@@ -124,19 +124,29 @@ export function createProviders(): Providers {
   };
 }
 
+export interface CreateMockProvidersOptions {
+  /** Per-slot replacements. Story 1.5 adds this so tests and Storybook can
+   *  swap in `noopArProvider()` to keep MediaPipe out of the unit + browser
+   *  test loop. */
+  overrides?: Partial<Providers>;
+}
+
 // Always returns mock instances — env-var-independent. Used by tests and by
 // Storybook's preview decorator (Story 1.3) so stories never depend on env.
-export function createMockProviders(): Providers {
+export function createMockProviders(
+  options: CreateMockProvidersOptions = {},
+): Providers {
+  const overrides = options.overrides ?? {};
   return {
-    ar: new MockARProvider(),
-    reviews: new MockReviewProvider(),
-    auth: new MockAuthProvider(),
-    attribution: new MockAttributionProvider(),
-    notification: new MockNotificationProvider(),
-    bookingHandoff: new MockBookingHandoffProvider(),
-    salon: new MockSalonProvider(),
-    bsg: new MockBSGProvider(),
-    calendar: new MockCalendarProvider(),
-    editorial: new MockEditorialProvider(),
+    ar: overrides.ar ?? new MockARProvider(),
+    reviews: overrides.reviews ?? new MockReviewProvider(),
+    auth: overrides.auth ?? new MockAuthProvider(),
+    attribution: overrides.attribution ?? new MockAttributionProvider(),
+    notification: overrides.notification ?? new MockNotificationProvider(),
+    bookingHandoff: overrides.bookingHandoff ?? new MockBookingHandoffProvider(),
+    salon: overrides.salon ?? new MockSalonProvider(),
+    bsg: overrides.bsg ?? new MockBSGProvider(),
+    calendar: overrides.calendar ?? new MockCalendarProvider(),
+    editorial: overrides.editorial ?? new MockEditorialProvider(),
   };
 }

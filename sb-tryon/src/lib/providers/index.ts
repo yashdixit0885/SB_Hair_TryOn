@@ -75,7 +75,7 @@ export { ProviderError } from "./errors";
 
 // Factory + Providers shape (server-safe)
 export { createMockProviders, createProviders } from "./factory";
-export type { Providers } from "./factory";
+export type { CreateMockProvidersOptions, Providers } from "./factory";
 
 // React Context + hook (client-only by their own "use client" directive)
 export { ProvidersContext, useProvider } from "./context";

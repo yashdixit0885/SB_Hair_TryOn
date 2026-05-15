@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { COLOR_SHIFT_FRAGMENT_SHADER } from "./color-shift.glsl";
+import { COLOR_SHIFT_FRAGMENT_SHADER, COLOR_SHIFT_VERTEX_SHADER } from "./color-shift.glsl";
+
+describe("COLOR_SHIFT_VERTEX_SHADER", () => {
+  it("is a non-empty string", () => {
+    expect(typeof COLOR_SHIFT_VERTEX_SHADER).toBe("string");
+    expect(COLOR_SHIFT_VERTEX_SHADER.length).toBeGreaterThan(0);
+  });
+
+  it("declares GLSL ES 3.00", () => {
+    expect(COLOR_SHIFT_VERTEX_SHADER).toContain("#version 300 es");
+  });
+
+  it("exports vUv varying for fragment shader consumption", () => {
+    expect(COLOR_SHIFT_VERTEX_SHADER).toContain("vUv");
+  });
+});
 
 describe("COLOR_SHIFT_FRAGMENT_SHADER", () => {
   it("is a non-empty string", () => {

@@ -47,7 +47,7 @@ async function createTestJpeg(): Promise<File> {
 // browser environment (canvas + createImageBitmap); does not run in jsdom.
 export const WithPhotoLoaded: StoryObj<typeof PhotoUploader> = {
   play: async ({ canvasElement }) => {
-    const { userEvent } = await import("@storybook/test");
+    const { userEvent } = await import("storybook/test");
     const input = canvasElement.querySelector<HTMLInputElement>(
       "#photo-uploader-input",
     );

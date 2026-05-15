@@ -43,9 +43,12 @@ export function ConsentPrompt({
   const declinedId = useId();
 
   // Reset choice and submitting state each time the dialog opens so FR46
-  // re-prompts always start from the default "local" selection.
+  // re-prompts always start from the default "local" selection. The setState
+  // calls are gated on `open` so they only fire when the dialog transitions
+  // from closed → open, which is equivalent to a subscription callback.
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChoice("local");
       setSubmitting(false);
     }

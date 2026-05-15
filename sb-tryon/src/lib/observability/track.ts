@@ -11,7 +11,7 @@ export type TrackedEvent =
       durationMs: number;
       deviceClass: DeviceClass;
     }
-  | { name: "tryon.render_completed"; durationMs: number }
+  | { name: "tryon.render_completed"; durationMs: number; confidence: number }
   | { name: "tryon.color_selected"; colorId: string }
   // Consent (FR46). Payload contains sessionId only — no biometric data,
   // no fileName, no photo hash. AGENTS.md §1 #2 cross-cutting invariant.

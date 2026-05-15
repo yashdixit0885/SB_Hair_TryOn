@@ -65,3 +65,19 @@
 
 - **`ProviderError` missing `Object.setPrototypeOf`** [`sb-tryon/src/lib/providers/errors.ts`] — `instanceof ProviderError` breaks when compiled to a target below ES2015. Current tsconfig is ES2015+, so not a live risk. Fix before adding Babel transforms or lowering the target.
 - **`factory.ts` statically imports all 10 Mock classes** [`sb-tryon/src/lib/providers/factory.ts`] — Every server-side import of `createProviders` pulls the entire mock tree into the bundle. Acceptable for Demo V1 (mock-only). Use dynamic imports or a factory split before Production V1 to avoid shipping mock code in the production bundle.
+
+## Deferred from: code review of 1-8-build-fadesimulator-90-day-fade-timeline (2026-05-14)
+
+- **D-1-8-I: Snap logic picks first milestone in array, not nearest** [`FadeSimulator.tsx:98-104`] — `for...break` finds first milestone within SNAP_THRESHOLD rather than nearest; milestone spacing (14/28/56, minimum gap 14) means first=nearest for all practical positions. Revisit if milestones or threshold change.
+- **D-1-8-J: Stale `washesPerWeek` closure in `handleSliderChange`** [`FadeSimulator.tsx:84`] — `washesPerWeek` is in the deps array so callback recreates on store update; race window is single re-render cycle. Not actionable without observable failure.
+- **D-1-8-L: `sliderCbs`/`selectChangeHandler` module-level mutable test state** [`FadeSimulator.test.tsx:22-29`] — Consistent with established test suite pattern; tests pass; silent no-op risk if `beforeEach` cleanup is ever removed.
+- **D-1-8-M: Static `thumbLabels` may suppress `aria-valuenow` announcement in some AT+browser combos** [`FadeSimulator.tsx:143`] — Radix sets `aria-valuenow/min/max` automatically; live region provides complementary feedback; low practical risk.
+- **D-1-8-N: `onValueCommit` silently drops if slider wrapper destructures without re-passing** [`slider.tsx`] — Future fragility if `slider.tsx` is refactored; not a current bug.
+- **D-1-8-S: Non-deterministic `performance.now()` assertion in jsdom** [`FadeSimulator.test.tsx:263`] — Spec mandates this test; CI jitter is a known risk; threshold (16ms/frame) is generous in jsdom but can fail under high load.
+
+## Deferred from: code review of 1-7-build-colorrender-component-texture-preserving-webgl2 (2026-05-14)
+
+- **D-1-7-A: COLOR_SHIFT_VERTEX_SHADER declared above fragment shader** [`sb-tryon/src/lib/ar/color-shift.glsl.ts`] — Task 4 spec said to place the vertex shader below the existing fragment shader export; the implementation placed it above. Cosmetic ordering difference only; no functional impact since both are exported constants.
+- **D-1-7-B: AC6 500ms budget test covers full async pipeline, not just the composite operation** [`sb-tryon/src/components/render/ColorRender.test.tsx`] — The Vitest latency test measures the full roundtrip (createImageBitmap + ar.segment mock + compositeHslOnly mock) rather than isolating the Canvas2D composite call on a 512×512 fixture. Passes trivially since all async calls are mocked; does not validate the real compositing budget.
+- **D-1-7-C: alphaMask size vs width*height not validated before WebGL texImage2D** [`sb-tryon/src/components/render/ColorRender.tsx`] — Pre-existing gap in the ARProvider contract. canvas-2d-fallback.ts already guards and logs a warning; the WebGL path trusts the provider. Deferring until ARProvider contract is tightened in a future story.
+- **D-1-7-D: RenderConfidenceBanner replaces canvas in DOM, GL cleanup relies on unmount-only effect** [`sb-tryon/src/components/render/ColorRender.tsx`] — When confidence is low, the canvas element is removed from the DOM while the component is still mounted. GL context remains technically valid on a detached canvas; cleanup (deleteTexture, deleteProgram, loseContext) runs on component unmount as designed. Speculative risk only.

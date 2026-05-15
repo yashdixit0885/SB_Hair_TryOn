@@ -46,4 +46,27 @@ test.describe("Keyboard-only navigation (NFR23)", () => {
     const main = page.locator("main#main-content");
     await expect(main).toBeFocused();
   });
+
+  // AC7 (Story 1.7) — the ColorRender canvas is keyboard-reachable via Tab.
+  // ?color=auburn ensures a colorId is present so the canvas is visible
+  // (without it, colorId is null and the canvas is hidden with display:none).
+  test("color-render canvas is keyboard-reachable via Tab", async ({
+    page,
+    browserName,
+  }) => {
+    await page.goto("/test/color-render-smoke?color=auburn");
+
+    // Tab until focus lands on the canvas (tabIndex={0})
+    // Limit to 10 tabs to avoid an infinite loop if the canvas is missing.
+    let canvasFocused = false;
+    for (let i = 0; i < 10; i++) {
+      await tab(page, browserName);
+      const canvas = page.locator("canvas");
+      if (await canvas.count() > 0 && await canvas.first().evaluate((el) => el === document.activeElement)) {
+        canvasFocused = true;
+        break;
+      }
+    }
+    expect(canvasFocused).toBe(true);
+  });
 });

@@ -21,8 +21,8 @@ describe("track", () => {
     expect(arg).toContain("laptop");
   });
 
-  it("logs render_completed with duration", () => {
-    track({ name: "tryon.render_completed", durationMs: 18 });
+  it("logs render_completed with duration and confidence", () => {
+    track({ name: "tryon.render_completed", durationMs: 18, confidence: 0.92 });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy.mock.calls[0][0]).toContain("tryon.render_completed");
   });

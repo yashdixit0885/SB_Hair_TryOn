@@ -9,6 +9,15 @@
 //   uTargetLab  : vec3      — target color in Lab (L 0-100, a/b roughly -128..127)
 //   uPorosity   : float     — 0..1, lifts chroma weight on Type-4 textures
 
+export const COLOR_SHIFT_VERTEX_SHADER: string = /* glsl */ `#version 300 es
+in vec2 aPosition;
+out vec2 vUv;
+void main() {
+  vUv = aPosition * 0.5 + 0.5;
+  gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+`;
+
 export const COLOR_SHIFT_FRAGMENT_SHADER: string = /* glsl */ `#version 300 es
 precision highp float;
 

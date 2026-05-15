@@ -4,7 +4,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IDBFactory } from "fake-indexeddb";
 import {
+  clearCachedFaceLandmarkerModel,
   clearCachedHairSegmentationModel,
+  getCachedFaceLandmarkerModel,
   getCachedHairSegmentationModel,
 } from "./model-cache";
 
@@ -118,5 +120,53 @@ describe("clearCachedHairSegmentationModel", () => {
 
   it("is a no-op when the cache is empty", async () => {
     await expect(clearCachedHairSegmentationModel()).resolves.toBeUndefined();
+  });
+});
+
+describe("getCachedFaceLandmarkerModel", () => {
+  it("first call hits fetch; second call does not (uses face-landmarker cache key)", async () => {
+    const fetchSpy = mockFetchOnce();
+
+    const first = await getCachedFaceLandmarkerModel();
+    expect(typeof first).toBe("string");
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    const second = await getCachedFaceLandmarkerModel();
+    expect(typeof second).toBe("string");
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses a DIFFERENT cache key from the hair model (no key collision)", async () => {
+    const fetchSpy = mockFetchOnce();
+    await getCachedHairSegmentationModel();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    // Face landmarker model must NOT be served from the hair model's cache entry.
+    await getCachedFaceLandmarkerModel();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("throws on upstream fetch failure", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("nope", { status: 500, statusText: "Server Error" }),
+    );
+    await expect(getCachedFaceLandmarkerModel()).rejects.toThrow(
+      /Failed to fetch face landmarker model/,
+    );
+  });
+});
+
+describe("clearCachedFaceLandmarkerModel", () => {
+  it("clears the face cache without affecting the hair cache", async () => {
+    const fetchSpy = mockFetchOnce();
+    await getCachedHairSegmentationModel();
+    await getCachedFaceLandmarkerModel();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    await clearCachedFaceLandmarkerModel();
+    // Hair model still cached.
+    await getCachedHairSegmentationModel();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    // Face model re-fetches.
+    await getCachedFaceLandmarkerModel();
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 });

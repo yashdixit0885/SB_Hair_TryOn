@@ -54,6 +54,13 @@
 - **`role="alert"` + `aria-live="polite"` ARIA conflict** [`ErrorBanner.tsx:43–44`] — `role=alert` implies `aria-live="assertive"`; the explicit `polite` override creates implementation-defined AT behavior. Combination was mandated by AC8. Revisit with a11y specialist in a future a11y review pass.
 - **`h1.tabIndex = -1` mutation never cleaned up** [`PageShell.tsx:68`] — Route-change effect sets `h1.tabIndex = -1` and never resets it. If a future component sets `<h1 tabIndex={0}>` explicitly, PageShell will silently overwrite it on the next navigation. Add cleanup in `useEffect` return if this becomes an issue.
 
+## Deferred from: code review of 1-6-build-photouploader-consentprompt-with-consent-state-machine (2026-05-14)
+
+- **D-1-6-A: `getCachedModel` leaks IDB connection on success path** [`sb-tryon/src/lib/persistence/model-cache.ts`] — `getCachedModel` has no `finally { db.close() }` on the success path; `clearCachedModel` already does this correctly. Story 1.6 extends the same pattern for `getCachedFaceLandmarkerModel` without fixing it. Pre-existing; fix alongside any model-cache refactor.
+- **D-1-6-B: `openDb()` rejection propagates uncaught when IndexedDB blocked** [`sb-tryon/src/lib/persistence/model-cache.ts`] — Firefox private mode, Brave strict shields, and Safari ITP can block IndexedDB; the rejection propagates out of `getCachedModel` entirely, bypassing the documented in-memory fallback. Pre-existing pattern (see also D-1-5-D); fix in Story 1.13 alongside the DemoFallbackPath.
+- **D-1-6-C: `response.arrayBuffer()` rejects mid-stream in model fetch** [`sb-tryon/src/lib/persistence/model-cache.ts`] — Network drop after `response.ok` passes causes an unrecognizable error to propagate; caller sees a generic fetch failure rather than a labeled model-load error. Pre-existing; fix alongside model-cache error-message improvements.
+- **D-1-6-D: `file.type` empty string on Android camera capture** [`sb-tryon/src/components/render/PhotoUploader.tsx`] — Some Android browsers omit the MIME type for camera captures; the empty string fails the `ACCEPTED_TYPES.includes()` check and shows "That file isn't a photo we can use" for a valid JPEG. Spec says verify MIME on the File object; empty MIME is correctly rejected per spec. Add magic-bytes fallback in a future story if Android camera support becomes a priority.
+
 ## Deferred from: code review of 1-2-define-9-provider-contracts-factory-providerscontext-eslint-enforcement (2026-05-04)
 
 - **`ProviderError` missing `Object.setPrototypeOf`** [`sb-tryon/src/lib/providers/errors.ts`] — `instanceof ProviderError` breaks when compiled to a target below ES2015. Current tsconfig is ES2015+, so not a live risk. Fix before adding Babel transforms or lowering the target.

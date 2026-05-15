@@ -12,7 +12,11 @@ export type TrackedEvent =
       deviceClass: DeviceClass;
     }
   | { name: "tryon.render_completed"; durationMs: number }
-  | { name: "tryon.color_selected"; colorId: string };
+  | { name: "tryon.color_selected"; colorId: string }
+  // Consent (FR46). Payload contains sessionId only — no biometric data,
+  // no fileName, no photo hash. AGENTS.md §1 #2 cross-cutting invariant.
+  | { name: "consent.granted"; scope: "local" | "saved"; sessionId: string }
+  | { name: "consent.declined"; sessionId: string };
 
 /**
  * Demo V1: writes structured event lines to `console.info`. Cheap; visible in

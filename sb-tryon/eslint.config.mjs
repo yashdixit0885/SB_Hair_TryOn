@@ -96,8 +96,14 @@ const eslintConfig = defineConfig([
   // Architecture §5 — Consent gate: raw <input type="file"> is blocked everywhere.
   // Use <PhotoUploader> which renders <ConsentPrompt> internally (FR46,
   // cross-cutting concern #2 — biometric privacy).
+  //
+  // <PhotoUploader> itself is the SINGLE authorized owner of the file-input
+  // JSX (Story 1.6). The exemption is declared at the config level (not via
+  // inline `eslint-disable`) so the audit surface stays visible: any future
+  // file added to `ignores` shows up in `git log eslint.config.mjs`.
   {
     files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/components/render/PhotoUploader.tsx"],
     rules: {
       "no-restricted-syntax": [
         "error",

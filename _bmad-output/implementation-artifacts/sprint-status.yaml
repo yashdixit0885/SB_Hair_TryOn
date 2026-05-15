@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-03
-last_updated: 2026-05-13  # 1-5 → done at user direction; AC14 Type-4 fixture deferred (D-1-5-F)
+last_updated: 2026-05-14  # 1-6 → done (code review complete, all patches applied)
 project: SB_Project
 project_key: NOKEY
 tracking_system: file-system
@@ -49,7 +49,7 @@ development_status:
   1-3-implement-oklch-design-tokens-foundation-primitives-storybook-axe-core: done
   1-4-build-cross-cutting-layout-shells: done
   1-5-implement-mediapipe-tasks-vision-mockarprovider-segmentation-pipeline: done
-  1-6-build-photouploader-consentprompt-with-consent-state-machine: backlog
+  1-6-build-photouploader-consentprompt-with-consent-state-machine: done
   1-7-build-colorrender-component-texture-preserving-webgl2: backlog
   1-8-build-fadesimulator-90-day-fade-timeline: backlog
   1-9-build-lightingtoggle-3-calibrated-presets: backlog

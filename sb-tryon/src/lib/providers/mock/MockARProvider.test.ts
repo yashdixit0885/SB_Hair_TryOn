@@ -17,17 +17,21 @@ vi.mock("@mediapipe/tasks-vision", () => ({
   ImageSegmenter: {
     createFromOptions: vi.fn(),
   },
+  FaceLandmarker: {
+    createFromOptions: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/persistence/model-cache", () => ({
   getCachedHairSegmentationModel: vi.fn(async () => "blob:mock-model"),
+  getCachedFaceLandmarkerModel: vi.fn(async () => "blob:mock-face-model"),
 }));
 
 vi.mock("@/lib/observability/track", () => ({
   track: vi.fn(),
 }));
 
-import { ImageSegmenter } from "@mediapipe/tasks-vision";
+import { FaceLandmarker, ImageSegmenter } from "@mediapipe/tasks-vision";
 import { ProviderError } from "@/lib/providers/errors";
 import { track } from "@/lib/observability/track";
 import { MockARProvider } from "./MockARProvider";
@@ -35,6 +39,23 @@ import { MockARProvider } from "./MockARProvider";
 const createFromOptions = ImageSegmenter.createFromOptions as unknown as ReturnType<
   typeof vi.fn
 >;
+const faceCreateFromOptions =
+  FaceLandmarker.createFromOptions as unknown as ReturnType<typeof vi.fn>;
+
+interface FakeFaceLandmarker {
+  detect: ReturnType<typeof vi.fn>;
+  close: ReturnType<typeof vi.fn>;
+}
+
+function fakeFaceLandmarker(faceCount: number): FakeFaceLandmarker {
+  const faceLandmarks = Array.from({ length: faceCount }, () => [
+    { x: 0.5, y: 0.5, z: 0 },
+  ]);
+  return {
+    detect: vi.fn(() => ({ faceLandmarks })),
+    close: vi.fn(),
+  };
+}
 
 interface FakeMask {
   width: number;
@@ -101,6 +122,7 @@ beforeEach(() => {
   createFromOptionsSpy.mockClear();
   filesetResolverSpy.mockClear();
   createFromOptions.mockReset();
+  faceCreateFromOptions.mockReset();
   revokeObjectURLSpy.mockClear();
   URL.createObjectURL = () => "blob:mock-model";
   URL.revokeObjectURL = revokeObjectURLSpy;
@@ -273,5 +295,114 @@ describe("MockARProvider.dispose", () => {
   it("is a no-op when called before prewarm", async () => {
     const provider = new MockARProvider();
     await expect(provider.dispose()).resolves.toBeUndefined();
+  });
+});
+
+describe("MockARProvider.detectFace", () => {
+  it("returns { faceDetected: true } when FaceLandmarker yields a non-empty landmark array", async () => {
+    faceCreateFromOptions.mockImplementation(async () => fakeFaceLandmarker(1));
+    const provider = new MockARProvider();
+    const result = await provider.detectFace(fakeBitmap);
+    expect(result.faceDetected).toBe(true);
+    expect(typeof result.confidence).toBe("number");
+    expect(result.confidence).toBeGreaterThan(0);
+    expect(result.confidence).toBeLessThanOrEqual(1);
+  });
+
+  it("returns { faceDetected: false } when no faces are detected (does NOT throw)", async () => {
+    faceCreateFromOptions.mockImplementation(async () => fakeFaceLandmarker(0));
+    const provider = new MockARProvider();
+    const result = await provider.detectFace(fakeBitmap);
+    expect(result.faceDetected).toBe(false);
+    // confidence omitted when no face.
+    expect(result.confidence).toBeUndefined();
+  });
+
+  it("rejects with DISPOSED when called after dispose", async () => {
+    faceCreateFromOptions.mockImplementation(async () => fakeFaceLandmarker(1));
+    const provider = new MockARProvider();
+    await provider.detectFace(fakeBitmap); // initialize first
+    await provider.dispose();
+    await expect(provider.detectFace(fakeBitmap)).rejects.toMatchObject({
+      code: "DISPOSED",
+    });
+  });
+
+  it("lazy-loads the face landmarker model on first call (not during prewarm())", async () => {
+    createFromOptions.mockImplementation(async () => fakeSegmenter());
+    faceCreateFromOptions.mockImplementation(async () => fakeFaceLandmarker(1));
+    const provider = new MockARProvider();
+    await provider.prewarm();
+    expect(faceCreateFromOptions).not.toHaveBeenCalled();
+    await provider.detectFace(fakeBitmap);
+    expect(faceCreateFromOptions).toHaveBeenCalledTimes(1);
+  });
+
+  it("idempotent in-flight: concurrent first calls share one createFromOptions invocation", async () => {
+    let calls = 0;
+    faceCreateFromOptions.mockImplementation(async () => {
+      await new Promise((r) => setTimeout(r, 5));
+      calls++;
+      return fakeFaceLandmarker(1);
+    });
+    const provider = new MockARProvider();
+    await Promise.all([
+      provider.detectFace(fakeBitmap),
+      provider.detectFace(fakeBitmap),
+      provider.detectFace(fakeBitmap),
+    ]);
+    expect(calls).toBe(1);
+  });
+
+  it("clears the in-flight promise on rejection so a retry can succeed", async () => {
+    let attempt = 0;
+    faceCreateFromOptions.mockImplementation(async () => {
+      attempt++;
+      if (attempt === 1) throw new Error("transient face-model fetch failure");
+      return fakeFaceLandmarker(1);
+    });
+    const provider = new MockARProvider();
+    await expect(provider.detectFace(fakeBitmap)).rejects.toThrow(/transient/);
+    const result = await provider.detectFace(fakeBitmap);
+    expect(result.faceDetected).toBe(true);
+    expect(attempt).toBe(2);
+  });
+
+  it("closes the face landmarker and revokes its model URL on dispose", async () => {
+    const fl = fakeFaceLandmarker(1);
+    faceCreateFromOptions.mockImplementation(async () => fl);
+    const provider = new MockARProvider();
+    URL.createObjectURL = () => "blob:mock-face-model";
+    await provider.detectFace(fakeBitmap);
+    await provider.dispose();
+    expect(fl.close).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:mock-face-model");
+  });
+
+  it("does NOT emit telemetry (face detection is upload validation, not render-perf)", async () => {
+    faceCreateFromOptions.mockImplementation(async () => fakeFaceLandmarker(1));
+    const provider = new MockARProvider();
+    await provider.detectFace(fakeBitmap);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it("throws ProviderError(DETECT_FAILED) when landmarker.detect() throws synchronously", async () => {
+    faceCreateFromOptions.mockImplementation(async () => ({
+      detect: vi.fn(() => { throw new Error("WASM heap corrupted"); }),
+      close: vi.fn(),
+    }));
+    const provider = new MockARProvider();
+    await expect(provider.detectFace(fakeBitmap)).rejects.toMatchObject({
+      code: "DETECT_FAILED",
+    });
+  });
+
+  it("shares a single FilesetResolver across prewarm() and detectFace() (AC9)", async () => {
+    createFromOptions.mockImplementation(async () => fakeSegmenter());
+    faceCreateFromOptions.mockImplementation(async () => fakeFaceLandmarker(1));
+    const provider = new MockARProvider();
+    await provider.prewarm();
+    await provider.detectFace(fakeBitmap);
+    expect(filesetResolverSpy).toHaveBeenCalledTimes(1);
   });
 });

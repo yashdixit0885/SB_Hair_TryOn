@@ -1,17 +1,25 @@
-// IndexedDB cache for the MediaPipe hair-segmentation model bytes (AR5).
-// First session fetches from CDN (~3MB), persists to IndexedDB; subsequent
-// sessions read from storage and skip the network.
+// IndexedDB cache for MediaPipe model bytes.
 //
-// Cache key is the model file basename. If a future story needs to swap
-// models or invalidate on version bump, change the key — the schema gives us
-// free invalidation.
+// First session fetches from the CDN, persists to IndexedDB; subsequent
+// sessions read from storage and skip the network. Cache key is the model
+// file basename — if a future story needs to swap models or invalidate on
+// version bump, change the key and the schema gives us free invalidation.
+//
+// Story 1.5 added the hair segmentation model; Story 1.6 adds the face
+// landmarker. Both delegate to `getCachedModel(opts)`. The shared `openDb`
+// helper guarantees both models share one DB connection per call.
 
 const DB_NAME = "sb-tryon-cache";
 const DB_VERSION = 1;
 const STORE_NAME = "model-cache";
+
 const HAIR_MODEL_KEY = "selfie_multiclass_256x256";
 const HAIR_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite";
+
+const FACE_LANDMARKER_KEY = "face_landmarker";
+const FACE_LANDMARKER_URL =
+  "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task";
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -57,40 +65,43 @@ function idbDelete(db: IDBDatabase, key: string): Promise<void> {
   });
 }
 
+interface CachedModelOptions {
+  cacheKey: string;
+  modelUrl: string;
+  /** Human-readable model label for the fetch-failed error message. */
+  label: string;
+}
+
 /**
- * Returns a Blob URL for the cached hair-segmentation model. First call
- * fetches from CDN and stores bytes in IndexedDB; subsequent calls (any tab,
- * any session) read from IndexedDB and skip the network.
+ * Returns a Blob URL for a cached MediaPipe model. First call fetches from
+ * CDN and stores bytes in IndexedDB; subsequent calls read from IndexedDB
+ * and skip the network. Caller is responsible for `URL.revokeObjectURL`
+ * on dispose.
  *
- * Caller is responsible for `URL.revokeObjectURL(url)` on dispose.
- *
- * If IndexedDB persistence fails (quota exceeded on iOS Safari, Brave
- * fingerprinting block, etc.) the function still returns a Blob URL backed
- * by the in-memory fetch result — the session works, no caching for next
- * time. Only a hard fetch failure rejects.
+ * If IndexedDB persistence fails (Safari private quota, Brave fingerprint
+ * block, etc.) the function still returns a Blob URL backed by the in-memory
+ * fetch result — the session works, no caching for next time. Only a hard
+ * fetch failure rejects.
  */
-export async function getCachedHairSegmentationModel(): Promise<string> {
+async function getCachedModel(opts: CachedModelOptions): Promise<string> {
   const db = await openDb();
   try {
-    const cached = await idbGet<ArrayBuffer>(db, HAIR_MODEL_KEY);
+    const cached = await idbGet<ArrayBuffer>(db, opts.cacheKey);
     if (cached) {
       return URL.createObjectURL(new Blob([cached]));
     }
-    const response = await fetch(HAIR_MODEL_URL);
+    const response = await fetch(opts.modelUrl);
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch hair model: ${response.status} ${response.statusText}`,
+        `Failed to fetch ${opts.label}: ${response.status} ${response.statusText}`,
       );
     }
     const bytes = await response.arrayBuffer();
-    // Persist for future sessions, but don't fail the current load if the
-    // browser refuses to store (Safari private quota, etc.). We have the
-    // bytes in memory; the user can still try on a color this session.
     try {
-      await idbPut(db, HAIR_MODEL_KEY, bytes);
+      await idbPut(db, opts.cacheKey, bytes);
     } catch (err) {
       console.warn(
-        "[model-cache] IndexedDB persist failed; returning in-memory blob URL only.",
+        `[model-cache] IndexedDB persist failed for ${opts.cacheKey}; returning in-memory blob URL only.`,
         err,
       );
     }
@@ -100,12 +111,37 @@ export async function getCachedHairSegmentationModel(): Promise<string> {
   }
 }
 
-/** Test/dev helper: clears the cached model so the next call re-fetches. */
-export async function clearCachedHairSegmentationModel(): Promise<void> {
+export function getCachedHairSegmentationModel(): Promise<string> {
+  return getCachedModel({
+    cacheKey: HAIR_MODEL_KEY,
+    modelUrl: HAIR_MODEL_URL,
+    label: "hair model",
+  });
+}
+
+export function getCachedFaceLandmarkerModel(): Promise<string> {
+  return getCachedModel({
+    cacheKey: FACE_LANDMARKER_KEY,
+    modelUrl: FACE_LANDMARKER_URL,
+    label: "face landmarker model",
+  });
+}
+
+async function clearCachedModel(cacheKey: string): Promise<void> {
   const db = await openDb();
   try {
-    await idbDelete(db, HAIR_MODEL_KEY);
+    await idbDelete(db, cacheKey);
   } finally {
     db.close();
   }
+}
+
+/** Test/dev helper: clears the cached hair segmentation model. */
+export function clearCachedHairSegmentationModel(): Promise<void> {
+  return clearCachedModel(HAIR_MODEL_KEY);
+}
+
+/** Test/dev helper: clears the cached face landmarker model. */
+export function clearCachedFaceLandmarkerModel(): Promise<void> {
+  return clearCachedModel(FACE_LANDMARKER_KEY);
 }

@@ -34,6 +34,7 @@ export default defineConfig({
             "src/lib/**/*.test.{ts,tsx}",
             "src/components/**/*.test.{ts,tsx}",
             "src/test-utils/**/*.test.{ts,tsx}",
+            "src/app/**/*.test.{ts,tsx}",
           ],
           setupFiles: ["./vitest.setup.ts"],
         },

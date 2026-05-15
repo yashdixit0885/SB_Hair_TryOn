@@ -1,6 +1,6 @@
 # e2e fixture photos
 
-Reference photos used by [janelle.spec.ts](../../janelle.spec.ts) to feasibility-check the MediaPipe Tasks Vision hair segmentation pipeline against Type-4 hair (architecture handoff step 5).
+Reference photos used by [janelle.spec.ts](../../janelle.spec.ts) (Story 1.5 hair-segmentation feasibility) and [consent-flow.spec.ts](../../consent-flow.spec.ts) (Story 1.6 FR46 consent re-prompt invariant). The consent flow is photo-content-agnostic — any face fixture works, so the FR46 spec re-uses the same `type-4-fixture-1.jpg` file.
 
 ## Compliance posture
 
@@ -10,7 +10,7 @@ Per PRD §"Demo V1 Compliance Posture", these photos are **team-provided or cura
 
 | File | Source | License | Texture (Andre Walker) | Notes |
 |---|---|---|---|---|
-| `type-4-fixture-1.jpg` | _TODO: add a Type-4 reference photo_ | _TODO_ | 4a/4b/4c | Used as the canonical Janelle smoke fixture |
+| `type-4-fixture-1.jpg` | _TODO: add a Type-4 reference photo_ | _TODO_ | 4a/4b/4c | Janelle hair-segmentation smoke (Story 1.5) + consent-flow FR46 spec (Story 1.6) |
 
 ## Adding new fixtures
 

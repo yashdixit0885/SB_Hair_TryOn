@@ -5,7 +5,11 @@
 // Client Components: import { useProvider } from "@/lib/providers"
 
 // Contract types
-export type { ARProvider, SegmentationResult } from "./contracts/ar-provider";
+export type {
+  ARProvider,
+  FaceDetectionResult,
+  SegmentationResult,
+} from "./contracts/ar-provider";
 export type {
   AttributionProvider,
   AttributionTokenPayload,
